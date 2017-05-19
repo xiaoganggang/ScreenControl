@@ -1,16 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 默认时的背景图片-->
+    <!--&lt;!&ndash; 默认时的背景图片&ndash;&gt;
     <item android:drawable="@drawable/login2_btn_loginbg" />
-    <!-- 没有焦点时的背景图片 -->
+    &lt;!&ndash; 没有焦点时的背景图片 &ndash;&gt;
     <item android:state_window_focused="false"
         android:drawable="@drawable/login2_btn_loginbg" />
-    <!-- 非触摸模式下获得焦点并单击时的背景图片 -->
+    &lt;!&ndash; 非触摸模式下获得焦点并单击时的背景图片 &ndash;&gt;
     <item android:state_focused="true" android:state_pressed="true"   android:drawable= "@drawable/login2_btn_loginbgpressed" />
-    <!-- 触摸模式下单击时的背景图片-->
+    &lt;!&ndash; 触摸模式下单击时的背景图片&ndash;&gt;
     <item android:state_focused="false" android:state_pressed="true"   android:drawable="@drawable/login2_btn_loginbgpressed" />
-    <!--选中时的图片背景-->
+    &lt;!&ndash;选中时的图片背景&ndash;&gt;
     <item android:state_selected="true"   android:drawable="@drawable/login2_btn_loginbgpressed" />
-    <!--获得焦点时的图片背景-->
-    <item android:state_focused="true"   android:drawable="@drawable/login2_btn_loginbgpressed" />
+    &lt;!&ndash;获得焦点时的图片背景&ndash;&gt;
+    <item android:state_focused="true"   android:drawable="@drawable/login2_btn_loginbgpressed" />-->
+
+    <item android:state_enabled="true" android:state_checked="true" android:state_pressed="true"
+        android:drawable="@drawable/login2_btn_loginbgpressed" />
+    <item android:state_enabled="true" android:state_checked="false" android:state_pressed="true"
+        android:drawable="@drawable/login2_btn_loginbgpressed" />
+    <item android:state_enabled="true" android:state_checked="true"
+        android:drawable="@drawable/login2_btn_loginbg" />
+    <item android:state_enabled="true" android:state_checked="false"
+        android:drawable="@drawable/login2_btn_loginbg" />
+    <item android:state_enabled="false" android:state_checked="true"
+        android:drawable="@drawable/login2_btn_loginbg" />
+    <item android:state_enabled="false" android:state_checked="false"
+        android:drawable="@drawable/login2_btn_loginbg" />
+
 </selector>
