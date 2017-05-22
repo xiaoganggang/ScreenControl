@@ -16,6 +16,7 @@ import butterknife.Unbinder;
 import gang.com.screencontrol.fragment.Login_Fragment_one;
 import gang.com.screencontrol.fragment.Login_Fragment_two;
 import gang.com.screencontrol.util.AppManager;
+import gang.com.screencontrol.websocketo.Task;
 
 /**
  * http://blog.csdn.net/flowingflying/article/details/12995519 Fragment动画加载
@@ -40,6 +41,9 @@ public class LoginActivity extends AppCompatActivity {
         mUnbider = ButterKnife.bind(this);
         AppManager.addActivity(this);
         replaceFragment(new Login_Fragment_one());
+
+
+
     }
 
     @OnClick({R.id.login_qiehuan, R.id.login_out})

@@ -30,6 +30,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import gang.com.screencontrol.adapter.Adapter_Type;
 import gang.com.screencontrol.adapter.ExamplePagerAdapter;
+import gang.com.screencontrol.bean.DeviceData;
 import gang.com.screencontrol.bean.Type;
 
 
@@ -37,11 +38,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     private Unbinder unbinder;
-    private List<Type> list_type = new ArrayList<>();
-    private static final String[] CHANNELS = new String[]{"设备", "模式", "分组"};
+    private static final String[] CHANNELS = new String[]{"媒体", "设备", "模式", "分组", "消息"};
     private List<String> mDataList = Arrays.asList(CHANNELS);
-    private Adapter_Type mAdapter_type;
-    private ExamplePagerAdapter mExamplePagerAdapter = new ExamplePagerAdapter(mDataList,MainActivity.this);
+    private List<DeviceData> DeviceDatalist = new ArrayList<>();
+    private ExamplePagerAdapter mExamplePagerAdapter;
     private ViewPager mViewPager;
 
     @Override
@@ -50,8 +50,46 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         unbinder = ButterKnife.bind(this);
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
+        getDeviceDatalist();
+        mExamplePagerAdapter = new ExamplePagerAdapter(DeviceDatalist, mDataList, MainActivity.this);
         mViewPager.setAdapter(mExamplePagerAdapter);
         initMagicIndicator1();
+    }
+
+    //获取下方的各种数据信息
+    private void getDeviceDatalist() {
+        DeviceData deviceData = new DeviceData(R.drawable.startupicon, "设备");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "设备");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "设备");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "模式");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "分组");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "分组");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "消息");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
+        deviceData = new DeviceData(R.drawable.startupicon, "媒体");
+        DeviceDatalist.add(deviceData);
     }
 
     private void initMagicIndicator1() {
@@ -80,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
                 badgePagerTitleView.setInnerPagerTitleView(simplePagerTitleView);
-
 
 
                 // set badge position

@@ -21,6 +21,7 @@
             android:background="@mipmap/login_logo" />
 
         <TextView
+            android:id="@+id/txvw"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="80dp"

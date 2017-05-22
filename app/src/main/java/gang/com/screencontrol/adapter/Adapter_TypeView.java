@@ -1,14 +1,18 @@
 package gang.com.screencontrol.adapter;
 
 import android.content.Context;
+import android.media.Image;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.util.List;
 
 import gang.com.screencontrol.R;
+import gang.com.screencontrol.bean.DeviceData;
 import gang.com.screencontrol.bean.Type;
 
 /**
@@ -19,7 +23,7 @@ public class Adapter_TypeView extends RecyclerView.Adapter<Adapter_TypeView.view
 
     private LayoutInflater mInflater;
     private Context context;
-    private List<String> mDates;
+    private List<DeviceData> mDates;
 
     //define interface
     public static interface OnRecyclerViewItemClickListener {
@@ -28,6 +32,18 @@ public class Adapter_TypeView extends RecyclerView.Adapter<Adapter_TypeView.view
 
     private Adapter_TypeView.OnRecyclerViewItemClickListener mOnItemClickListener = null;
 
+    /**
+     * 刷新前清空数据的方法
+     */
+    public void clearDate() {
+        mDates.clear();
+    }
+
+    //刷新需要用到的方法
+    public void addDate(List<DeviceData> dates) {
+        mDates.addAll(dates);
+        notifyDataSetChanged();
+    }
 
     //最后给外面的调用者，定义一个设置Listener的方法（）
     public void setOnItemClickListener(Adapter_TypeView.OnRecyclerViewItemClickListener listener) {
@@ -35,7 +51,7 @@ public class Adapter_TypeView extends RecyclerView.Adapter<Adapter_TypeView.view
     }
 
     //一个构造函数
-    public Adapter_TypeView(Context context, List<String> mDates) {
+    public Adapter_TypeView(Context context, List<DeviceData> mDates) {
         this.context = context;
         this.mDates = mDates;
         this.mInflater = LayoutInflater.from(context);
@@ -43,14 +59,16 @@ public class Adapter_TypeView extends RecyclerView.Adapter<Adapter_TypeView.view
 
     @Override
     public viewholder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.item_main_type, parent, false);
+        View view = mInflater.inflate(R.layout.layout_deviceitem, parent, false);
         Adapter_TypeView.viewholder vh = new Adapter_TypeView.viewholder(view);
         return vh;
     }
 
     @Override
     public void onBindViewHolder(viewholder holder, final int position) {
-        //holder.stamp_type_name.setText(mDates.get(position).getValue());
+        DeviceData deviceData = mDates.get(position);
+        holder.miaoshu.setText(deviceData.getType());
+        holder.imageView.setImageResource(deviceData.getImg());
         //将创建的View注册点击事件
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,8 +87,13 @@ public class Adapter_TypeView extends RecyclerView.Adapter<Adapter_TypeView.view
     }
 
     class viewholder extends RecyclerView.ViewHolder {
+        ImageView imageView;
+        TextView miaoshu;
+
         public viewholder(View itemView) {
             super(itemView);
+            imageView = (ImageView) itemView.findViewById(R.id.device_pc);
+            miaoshu = (TextView) itemView.findViewById(R.id.miaoshu);
         }
     }
 }
