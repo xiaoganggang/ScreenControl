@@ -9,6 +9,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import org.java_websocket.client.WebSocketClient;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -33,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     private int flag = 0;
     private Unbinder mUnbider;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +44,6 @@ public class LoginActivity extends AppCompatActivity {
         mUnbider = ButterKnife.bind(this);
         AppManager.addActivity(this);
         replaceFragment(new Login_Fragment_one());
-
 
 
     }
@@ -78,4 +80,6 @@ public class LoginActivity extends AppCompatActivity {
         mUnbider.unbind();
         super.onDestroy();
     }
+
+
 }
