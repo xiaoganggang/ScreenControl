@@ -1,5 +1,10 @@
 package gang.com.screencontrol.websocketo;
 
+import android.content.Context;
+import android.util.Log;
+
+import com.google.gson.Gson;
+
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.handshake.ServerHandshake;
@@ -20,6 +25,11 @@ import gang.com.screencontrol.util.ToastUtil;
 public class Task implements Runnable {
     private String mUlWan = "wss://192.168.10.168:7681/test";
     private WebSocketClient mClient;
+    private Context context;
+
+    public Task(Context context) {
+        this.context = context;
+    }
 
     @Override
     public void run() {
@@ -29,33 +39,26 @@ public class Task implements Runnable {
 
                 return;
             }
-            mClient = new WebSocketClient(new URI(mUlWan), new Draft_17(), null, 30* 1000) {
+            mClient = new WebSocketClient(new URI(mUlWan), new Draft_17(), null, 30 * 1000) {
                 @Override
                 public void onOpen(ServerHandshake handshakedata) {
-                    LogUtil.d("啦啦啦开启", "开启");
-                   send("{\n" +
-                           "   \"body\" : {\n" +
-                           "      \"userName\" : \"Admin\",\n" +
-                           "      \"userPassword\" : \"admin\"\n" +
-                           "   },\n" +
-                           "   \"guid\" : \"M-0\",\n" +
-                           "   \"type\" : \"QUERYUSERLOGIN\"\n" +
-                           "}");
+//Failed writing handshake bytes (-1 of 14): Broken pipe 失败的写入握手字节
+                    send("handshakedata");
                 }
 
                 @Override
                 public void onMessage(String message) {
-
+                    Log.i("啦啦啦onMessage","onTextMessage payload = "+message);
                 }
 
                 @Override
                 public void onClose(int code, String reason, boolean remote) {
-                    LogUtil.d("啦啦啦关闭", reason+remote);
+                    LogUtil.d("啦啦啦关闭", reason + remote);
                 }
 
                 @Override
                 public void onError(Exception ex) {
-
+                    Log.i("啦啦啦onError","onTextMessage payload = "+ex+"");
                 }
             };
             LogUtil.d("啦啦啦", "客户端建立连接connect()");
