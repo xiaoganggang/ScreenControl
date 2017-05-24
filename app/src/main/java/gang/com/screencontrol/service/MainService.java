@@ -1,17 +1,15 @@
-package gang.com.screencontrol.fragment;
+package gang.com.screencontrol.service;
 
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-
+import android.content.IntentFilter;
+import android.graphics.BitmapFactory;
+import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -27,10 +25,6 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
 import gang.com.screencontrol.MainActivity;
 import gang.com.screencontrol.R;
 import okhttp3.OkHttpClient;
@@ -39,71 +33,83 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
-
 /**
- * Created by xiaogangzai on 2017/5/16.
- * http://www.chengxuyuans.com/Android/97798.html-----websocket简介
- * http://www.open-open.com/lib/view/open1476778263175.html----两种方法实现websocket
+ * 该服务是开启与服务端websocket的长连接
+ * 开启前台服务还是不能避免进程杀死
+ * http://blog.csdn.net/double2hao/article/details/49742265
+ * https://juejin.im/entry/5889719c128fe10068530882  深入浅出 OkHttp Websocket-- 使用篇
  */
-
-public class Login_Fragment_one extends Fragment {
+public class MainService extends Service {
+    private IntentFilter mIF;
+    private BroadcastReceiver mBR;
     //长连接的建立
     static OkHttpClient mOkHttpClient;
-    public int msgCount;
     private WebSocket mWebSocket;
-    @BindView(R.id.edit_login1_dizhi)
-    EditText editLogin1Dizhi;
-    @BindView(R.id.edit_login1_duankou)
-    EditText editLogin1Duankou;
-    @BindView(R.id.edit_login1_username)
-    EditText editLogin1Username;
-    @BindView(R.id.edit_login1_pass)
-    EditText editLogin1Pass;
-    @BindView(R.id.image_login1_remeber)
-    ImageView imageLogin1Remeber;
-    @BindView(R.id.image_login1_zidonglogin)
-    ImageView imageLogin1Zidonglogin;
-    @BindView(R.id.button_login1)
-    Button buttonLogin1;
-    Unbinder unbinder;
-
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.layout_login_one, container, false);
-        unbinder = ButterKnife.bind(this, view);
-        return view;
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        throw new UnsupportedOperationException("Not yet implemented");
     }
+
+    /**
+     * 第一次开启服务会调用
+     * 创建一个前台服务
+     */
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mBR = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                // TODO Auto-generated method stub
+                Intent a = new Intent(MainService.this, MainService.class);
+                startService(a);
+            }
+        };
+        mIF = new IntentFilter();
+        mIF.addAction("listener");
+        registerReceiver(mBR, mIF);
+    }
+
+    /**
+     * 每次开启都会调用执行需要的事件
+     *
+     * @param intent
+     * @param flags
+     * @param startId
+     * @return
+     */
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        //启用前台服务，主要是startForeground()
+        intent = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, intent, 0);
+        Notification notification = new NotificationCompat.Builder(this)
+                .setContentTitle("服务器连接中")
+                //.setContentText("this is a text")
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.drawable.startupicon)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.starticon184))
+                .setContentIntent(pi)
+                .build();
+        notification.flags = Notification.FLAG_SHOW_LIGHTS;
+        startForeground(1, notification);
+        initWebSocket();
+        return super.onStartCommand(intent, flags, startId);
+    }
+
 
     @Override
-    public void onDestroyView() {
-        unbinder.unbind();
-        super.onDestroyView();
-
+    public void onDestroy() {
+        super.onDestroy();
+        Intent intent = new Intent();
+        intent.setAction("listener");
+        sendBroadcast(intent);
+        unregisterReceiver(mBR);
     }
-
-    @OnClick({R.id.image_login1_remeber, R.id.image_login1_zidonglogin, R.id.button_login1})
-    public void onViewClicked(View view) {
-        switch (view.getId()) {
-            case R.id.image_login1_remeber:
-                break;
-            case R.id.image_login1_zidonglogin:
-                break;
-            case R.id.button_login1:
-                initWebSocket();
-                StartActivity(MainActivity.class);
-                break;
-        }
-    }
-
-    private void StartActivity(Class activityo) {
-        Intent a = new Intent();
-        a.setClass(getActivity(), activityo);
-        startActivity(a);
-    }
-
 
     private void initWebSocket() {
+        //屏蔽安全证书的代码
         X509TrustManager xtm = new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) {
@@ -137,7 +143,7 @@ public class Login_Fragment_one extends Fragment {
                 return true;
             }
         };
-
+         //网络请求
         mOkHttpClient = new OkHttpClient.Builder()
                 .sslSocketFactory(sslContext.getSocketFactory())
                 .hostnameVerifier(DO_NOT_VERIFY)
@@ -148,7 +154,6 @@ public class Login_Fragment_one extends Fragment {
 
 
         Request request = new Request.Builder().url("wss://192.168.10.168:7681").build();
-
         //建立连接
         mOkHttpClient.newWebSocket(request, new WebSocketListener() {
             @Override
@@ -159,31 +164,23 @@ public class Login_Fragment_one extends Fragment {
                 System.out.println("client response header:" + response.headers());
                 System.out.println("client response:" + response);
                 //开启消息定时发送
-                webSocket.send("    {\n" +
-                        "       \"body\" : \"\",\n" +
-                        "       \"guid\" : \"CHECKSERVERVERSION\",\n" +
-                        "       \"type\" : \"CHECKSERVERVERSION\"\n" +
-                        "    }");
+                startTask(mWebSocket);
             }
-
             @Override
             public void onMessage(WebSocket webSocket, String text) {
                 System.out.println("client onMessage");
-                System.out.println("message:啦啦啦阿拉" + text);
+                System.out.println("message:" + text);
             }
-
             @Override
             public void onClosing(WebSocket webSocket, int code, String reason) {
                 System.out.println("client onClosing");
                 System.out.println("code:" + code + " reason:" + reason);
             }
-
             @Override
             public void onClosed(WebSocket webSocket, int code, String reason) {
                 System.out.println("client onClosed");
                 System.out.println("code:" + code + " reason:" + reason);
             }
-
             @Override
             public void onFailure(WebSocket webSocket, Throwable t, Response response) {
                 //出现异常会进入此回调
@@ -193,25 +190,19 @@ public class Login_Fragment_one extends Fragment {
             }
         });
     }
-
     //每秒发送一条消息
-    private void startTask(final WebSocket webSocket) {
-        Timer mTimer = new Timer();
+    private static void startTask(final WebSocket mWebSocket){
+        Timer mTimer= new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                if (webSocket == null) return;
-                msgCount++;
-                boolean isSuccessed = webSocket.send("    {\n" +
-                        "       \"body\" : \"\",\n" +
-                        "       \"guid\" : \"CHECKSERVERVERSION\",\n" +
-                        "       \"type\" : \"CHECKSERVERVERSION\"\n" +
-                        "    }");
+                if(mWebSocket == null) return;
+                boolean isSuccessed = mWebSocket.send("msg" + System.currentTimeMillis());
                 //除了文本内容外，还可以将如图像，声音，视频等内容转为ByteString发送
                 //boolean send(ByteString bytes);
             }
         };
-        mTimer.schedule(timerTask, 0, 30000);
+        mTimer.schedule(timerTask, 0, 1000);
     }
-
 }
+

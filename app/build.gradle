@@ -36,7 +36,7 @@ dependencies {
     compile project(':magicindicator')
     compile 'org.java-websocket:Java-WebSocket:1.3.0'
     compile 'com.android.support:cardview-v7:24.2.1'
-    compile 'com.squareup.okhttp3:okhttp:3.4.1'
-    compile 'com.squareup.okhttp3:mockwebserver:3.4.1'
+    compile 'com.squareup.okhttp3:okhttp:3.5.0'
+    compile 'com.squareup.okhttp3:mockwebserver:3.5.0'
     compile 'com.google.code.gson:gson:2.8.0'
 }

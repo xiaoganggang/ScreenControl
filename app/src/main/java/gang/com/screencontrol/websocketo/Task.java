@@ -20,6 +20,11 @@ import gang.com.screencontrol.util.ToastUtil;
  * Created by xiaogangzai on 2017/5/22.
  * http://www.cnblogs.com/Conker/p/6508420.html
  * http://blog.csdn.net/mad1989/article/details/38234759  Runnable的使用
+ * 开启这个子线程的方法
+ * Task task = new Task(getActivity());
+ * Thread td1 = new Thread(task, "td1");
+ * //多个Thread也可以同时使用一个Runbale，
+ * td1.start();
  */
 
 public class Task implements Runnable {
@@ -48,7 +53,7 @@ public class Task implements Runnable {
 
                 @Override
                 public void onMessage(String message) {
-                    Log.i("啦啦啦onMessage","onTextMessage payload = "+message);
+                    Log.i("啦啦啦onMessage", "onTextMessage payload = " + message);
                 }
 
                 @Override
@@ -58,7 +63,7 @@ public class Task implements Runnable {
 
                 @Override
                 public void onError(Exception ex) {
-                    Log.i("啦啦啦onError","onTextMessage payload = "+ex+"");
+                    Log.i("啦啦啦onError", "onTextMessage payload = " + ex + "");
                 }
             };
             LogUtil.d("啦啦啦", "客户端建立连接connect()");
