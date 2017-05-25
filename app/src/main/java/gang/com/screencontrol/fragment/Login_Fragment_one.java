@@ -159,17 +159,22 @@ public class Login_Fragment_one extends Fragment {
                 System.out.println("client response header:" + response.headers());
                 System.out.println("client response:" + response);
                 //开启消息定时发送
-                webSocket.send("    {\n" +
-                        "       \"body\" : \"\",\n" +
-                        "       \"guid\" : \"CHECKSERVERVERSION\",\n" +
-                        "       \"type\" : \"CHECKSERVERVERSION\"\n" +
-                        "    }");
+                if (mWebSocket == null) {
+                    System.out.println("message:啦dasd啦kong啦阿拉");
+                } else {
+                    mWebSocket.send("{\n" +
+                            "     \"body\" : \"\",\n" +
+                            "     \"guid\" : \"\",\n" +
+                            "     \"type\" : \"MASTERHEARTBEAT\"\n" +
+                            "  }");
+                }
+
             }
 
             @Override
             public void onMessage(WebSocket webSocket, String text) {
                 System.out.println("client onMessage");
-                System.out.println("message:啦啦啦阿拉" + text);
+                System.out.println("message:啦dasd啦啦阿拉" + "111" + text + "1111");
             }
 
             @Override
@@ -203,9 +208,12 @@ public class Login_Fragment_one extends Fragment {
                 if (webSocket == null) return;
                 msgCount++;
                 boolean isSuccessed = webSocket.send("    {\n" +
-                        "       \"body\" : \"\",\n" +
-                        "       \"guid\" : \"CHECKSERVERVERSION\",\n" +
-                        "       \"type\" : \"CHECKSERVERVERSION\"\n" +
+                        "       \"body\" : {\n" +
+                        "          \"userName\" : \"Admin\",\n" +
+                        "          \"userPassword\" : \"admin\"\n" +
+                        "       },\n" +
+                        "       \"guid\" : \"M-0\",\n" +
+                        "       \"type\" : \"QUERYUSERLOGIN\"\n" +
                         "    }");
                 //除了文本内容外，还可以将如图像，声音，视频等内容转为ByteString发送
                 //boolean send(ByteString bytes);

@@ -197,7 +197,11 @@ public class MainService extends Service {
             @Override
             public void run() {
                 if(mWebSocket == null) return;
-                boolean isSuccessed = mWebSocket.send("msg" + System.currentTimeMillis());
+                boolean isSuccessed = mWebSocket.send("{\n" +
+                        "     \"body\" : \"\",\n" +
+                        "     \"guid\" : \"\",\n" +
+                        "     \"type\" : \"MASTERHEARTBEAT\"\n" +
+                        "  }");
                 //除了文本内容外，还可以将如图像，声音，视频等内容转为ByteString发送
                 //boolean send(ByteString bytes);
             }

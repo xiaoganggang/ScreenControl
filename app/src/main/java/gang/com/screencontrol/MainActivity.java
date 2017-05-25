@@ -8,6 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.xiaopo.flying.sticker.StickerView;
+
 import net.lucode.hackware.magicindicator.MagicIndicator;
 import net.lucode.hackware.magicindicator.ViewPagerHelper;
 import net.lucode.hackware.magicindicator.buildins.UIUtil;
@@ -28,11 +30,8 @@ import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import gang.com.screencontrol.adapter.Adapter_Type;
 import gang.com.screencontrol.adapter.ExamplePagerAdapter;
 import gang.com.screencontrol.bean.DeviceData;
-import gang.com.screencontrol.bean.Type;
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,7 +42,12 @@ public class MainActivity extends AppCompatActivity {
     private List<DeviceData> DeviceDatalist = new ArrayList<>();
     private ExamplePagerAdapter mExamplePagerAdapter;
     private ViewPager mViewPager;
-
+    private static final String TAG = "MainActivity";
+    //拖拽图像相关
+    private StickerView stickerView;
+    //存储贴纸列表
+    private ArrayList<View> mStickers;
+    private LinearLayout contain_view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +59,9 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setAdapter(mExamplePagerAdapter);
         initMagicIndicator1();
     }
+
+
+
 
     //获取下方的各种数据信息
     private void getDeviceDatalist() {
