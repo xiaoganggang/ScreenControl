@@ -162,11 +162,14 @@ public class Login_Fragment_one extends Fragment {
                 if (mWebSocket == null) {
                     System.out.println("message:啦dasd啦kong啦阿拉");
                 } else {
-                    mWebSocket.send("{\n" +
-                            "     \"body\" : \"\",\n" +
-                            "     \"guid\" : \"\",\n" +
-                            "     \"type\" : \"MASTERHEARTBEAT\"\n" +
-                            "  }");
+                    mWebSocket.send("    {\n" +
+                            "       \"body\" : {\n" +
+                            "          \"userName\" : \"Admin\",\n" +
+                            "          \"userPassword\" : \"admin\"\n" +
+                            "       },\n" +
+                            "       \"guid\" : \"M-0\",\n" +
+                            "       \"type\" : \"QUERYUSERLOGIN\"\n" +
+                            "    }");
                 }
 
             }
