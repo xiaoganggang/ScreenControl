@@ -1,24 +1,21 @@
 package gang.com.screencontrol.fragment;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
@@ -27,13 +24,11 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
-import gang.com.screencontrol.MainAct_xiuding;
-import gang.com.screencontrol.MainActivity;
 import gang.com.screencontrol.R;
+import gang.com.screencontrol.adapter.BaseAdapter;
+import gang.com.screencontrol.adapter.ModelAdapter;
+import gang.com.screencontrol.bean.MobelBean;
+import gang.com.screencontrol.defineview.DividerItemDecoration;
 import gang.com.screencontrol.util.LogUtil;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -41,71 +36,35 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
-
 /**
- * Created by xiaogangzai on 2017/5/16.
- * http://www.chengxuyuans.com/Android/97798.html-----websocket简介
- * http://www.open-open.com/lib/view/open1476778263175.html----两种方法实现websocket
+ * Created by xiaogangzai on 2017/5/31.
  */
 
-public class Login_Fragment_one extends Fragment {
+public class Model_Fragment extends Fragment {
+    public static Model_Fragment instance = null;//给代码加一个单例模式
+    private RecyclerView mobel_recyle;
+    private ModelAdapter modelAdapter;
+    private List<MobelBean.BodyBean.BasicInfoBean> datalist = new ArrayList<>();
     //长连接的建立
     static OkHttpClient mOkHttpClient;
-    public int msgCount;
     private WebSocket mWebSocket;
-    @BindView(R.id.edit_login1_dizhi)
-    EditText editLogin1Dizhi;
-    @BindView(R.id.edit_login1_duankou)
-    EditText editLogin1Duankou;
-    @BindView(R.id.edit_login1_username)
-    EditText editLogin1Username;
-    @BindView(R.id.edit_login1_pass)
-    EditText editLogin1Pass;
-    @BindView(R.id.image_login1_remeber)
-    ImageView imageLogin1Remeber;
-    @BindView(R.id.image_login1_zidonglogin)
-    ImageView imageLogin1Zidonglogin;
-    @BindView(R.id.button_login1)
-    Button buttonLogin1;
-    Unbinder unbinder;
+    public static Model_Fragment getInstance() {
+        if (instance == null) {
+            instance = new Model_Fragment();
+        }
+        return instance;
+    }
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.layout_login_one, container, false);
-        unbinder = ButterKnife.bind(this, view);
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.layout_fragment_mobel, container, false);
+        mobel_recyle = (RecyclerView) view.findViewById(R.id.recyle_model);
+        getData();
         return view;
     }
 
-    @Override
-    public void onDestroyView() {
-        unbinder.unbind();
-        super.onDestroyView();
-
-    }
-
-    @OnClick({R.id.image_login1_remeber, R.id.image_login1_zidonglogin, R.id.button_login1})
-    public void onViewClicked(View view) {
-        switch (view.getId()) {
-            case R.id.image_login1_remeber:
-                break;
-            case R.id.image_login1_zidonglogin:
-                break;
-            case R.id.button_login1:
-                initWebSocket();
-
-                break;
-        }
-    }
-
-    private void StartActivity(Class activityo) {
-        Intent a = new Intent();
-        a.setClass(getActivity(), activityo);
-        startActivity(a);
-    }
-
-
-    private void initWebSocket() {
+    private void getData() {
         X509TrustManager xtm = new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) {
@@ -164,23 +123,21 @@ public class Login_Fragment_one extends Fragment {
                 if (mWebSocket == null) {
                     System.out.println("message:啦dasd啦kong啦阿拉");
                 } else {
-                    mWebSocket.send("    {\n" +
+                    mWebSocket.send("{\n" +
                             "       \"body\" : {\n" +
-                            "          \"userName\" : \"Admin\",\n" +
-                            "          \"userPassword\" : \"admin\"\n" +
+                            "          \"id\" : 1,\n" +
+                            "          \"keyword\" : \"\"\n" +
                             "       },\n" +
-                            "       \"guid\" : \"M-0\",\n" +
-                            "       \"type\" : \"QUERYUSERLOGIN\"\n" +
+                            "       \"guid\" : \"M-42\",\n" +
+                            "       \"type\" : \"GETMEDIAFILELIST\"\n" +
                             "    }");
                 }
-
             }
 
             @Override
             public void onMessage(WebSocket webSocket, String text) {
-                System.out.println("client onMessage");
-                StartActivity(MainAct_xiuding.class);
-                LogUtil.d("登录界面接收数据", text);
+                System.out.print("client onMessage");
+                LogUtil.d("模式接收的数据",text);
             }
 
             @Override
@@ -205,27 +162,18 @@ public class Login_Fragment_one extends Fragment {
         });
     }
 
-    //每秒发送一条消息
-    private void startTask(final WebSocket webSocket) {
-        Timer mTimer = new Timer();
-        TimerTask timerTask = new TimerTask() {
+    private void showView() {
+        modelAdapter = new ModelAdapter(getActivity(), datalist);
+        mobel_recyle.setAdapter(modelAdapter);
+        mobel_recyle.setLayoutManager(new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.HORIZONTAL));
+        mobel_recyle.setItemAnimator(new DefaultItemAnimator());
+        mobel_recyle.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.HORIZONTAL_LIST));
+        modelAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener() {
             @Override
-            public void run() {
-                if (webSocket == null) return;
-                msgCount++;
-                boolean isSuccessed = webSocket.send("    {\n" +
-                        "       \"body\" : {\n" +
-                        "          \"userName\" : \"Admin\",\n" +
-                        "          \"userPassword\" : \"admin\"\n" +
-                        "       },\n" +
-                        "       \"guid\" : \"M-0\",\n" +
-                        "       \"type\" : \"QUERYUSERLOGIN\"\n" +
-                        "    }");
-                //除了文本内容外，还可以将如图像，声音，视频等内容转为ByteString发送
-                //boolean send(ByteString bytes);
+            public void onClick(View v, int position) {
+
             }
-        };
-        mTimer.schedule(timerTask, 0, 30000);
+        });
     }
 
 }

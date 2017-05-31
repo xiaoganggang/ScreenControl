@@ -45,7 +45,6 @@ public class LoginActivity extends AppCompatActivity {
         AppManager.addActivity(this);
         replaceFragment(new Login_Fragment_one());
 
-
     }
 
     @OnClick({R.id.login_qiehuan, R.id.login_out})

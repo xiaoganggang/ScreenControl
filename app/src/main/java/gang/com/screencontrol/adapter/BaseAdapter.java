@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import java.util.List;
 
 /**
- * Created by Administrator on 2017/5/21.
+ * Created by xiaogangzai on 2017/5/21.
  */
 
 public abstract class BaseAdapter<T, H extends BaseViewHolder> extends RecyclerView.Adapter<BaseViewHolder> {
@@ -19,6 +19,15 @@ public abstract class BaseAdapter<T, H extends BaseViewHolder> extends RecyclerV
     protected LayoutInflater mInflater;
     protected Context context;
     protected int mLayoutResId;
+    private OnItemClickListener listener;
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
+    public interface OnItemClickListener {
+        void onClick(View v, int position);
+    }
 
     public BaseAdapter(Context context, List<T> dates, int mLayoutResId) {
         this.mDatas = dates;
@@ -29,16 +38,17 @@ public abstract class BaseAdapter<T, H extends BaseViewHolder> extends RecyclerV
 
     @Override
     public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-
-        View view = mInflater.inflate(mLayoutResId,null,false);
-        return new BaseViewHolder(view);
+        View view = LayoutInflater.from(parent.getContext()).inflate(mLayoutResId, parent, false);
+        BaseViewHolder vh = new BaseViewHolder(view,listener);
+        // View view = mInflater.inflate(mLayoutResId, parent, false);
+        return vh;
     }
 
     @Override
     public void onBindViewHolder(BaseViewHolder holder, int position) {
         //数据绑定用抽象方法来实现
         T t = getItem(position);
-        bindData(holder, t);
+        bindData((H)holder, t);
     }
 
     @Override
@@ -50,6 +60,26 @@ public abstract class BaseAdapter<T, H extends BaseViewHolder> extends RecyclerV
         return mDatas.get(position);
     }
 
-    public abstract void bindData(BaseViewHolder viewHolder, T t);
+    public abstract void bindData(H viewHolder, T t);
 
+    //一些公用方法
+    public List<T> getDates() {
+        return mDatas;
+    }
+
+    public void clearData() {
+        mDatas.clear();
+        notifyItemRangeRemoved(0, mDatas.size());
+    }
+
+    public void addData(List<T> datas) {
+        addData(0, datas);
+    }
+
+    public void addData(int position, List<T> datas) {
+        if (datas != null & datas.size() > 0) {
+            mDatas.addAll(datas);
+            notifyItemRangeChanged(position, mDatas.size());
+        }
+    }
 }

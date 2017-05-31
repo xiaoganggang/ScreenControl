@@ -3,31 +3,59 @@ package gang.com.screencontrol.adapter;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 /**
  * Created by xiaogangzai on 2017/5/21.
  */
 
-public class BaseViewHolder extends RecyclerView.ViewHolder {
+public class BaseViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-
+    private BaseAdapter.OnItemClickListener listener;
     private SparseArray<View> views;
 
-    public BaseViewHolder(View itemView) {
+    public BaseViewHolder(View itemView, BaseAdapter.OnItemClickListener listener) {
         super(itemView);
-        views = new SparseArray<>();
+        this.listener = listener;
+        itemView.setOnClickListener(this);
+        this.views = new SparseArray<View>();
+    }
+
+    public TextView getTextView(int id) {
+        return findView(id);
+    }
+
+    public ImageView getImageView(int id) {
+        return findView(id);
+    }
+
+    public Button getButton(int id) {
+        return findView(id);
     }
 
     public View getView(int id) {
         return findView(id);
     }
 
-    private View findView(int id) {
+    private <T extends View> T findView(int id) {
         View view = views.get(id);
-        if (view != null) {
+        /**
+         * 卧槽了，就这的一个错坑了我一天时间草草view == null不是view!=null
+         */
+        if (view == null) {
             view = itemView.findViewById(id);
             views.put(id, view);
         }
-        return view;
+        return (T) view;
+    }
+
+
+    @Override
+    public void onClick(View v) {
+        if (listener != null) {
+            listener.onClick(v, getLayoutPosition());
+        }
     }
 }
