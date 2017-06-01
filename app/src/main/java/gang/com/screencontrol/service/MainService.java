@@ -44,7 +44,8 @@ public class MainService extends Service {
     private BroadcastReceiver mBR;
     //长连接的建立
     static OkHttpClient mOkHttpClient;
-    private WebSocket mWebSocket;
+    public static WebSocket mWebSocket;
+	private static MessageCallBackListener messageLister;
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
@@ -108,7 +109,7 @@ public class MainService extends Service {
         unregisterReceiver(mBR);
     }
 
-    private void initWebSocket() {
+    private static void initWebSocket() {
         //屏蔽安全证书的代码
         X509TrustManager xtm = new X509TrustManager() {
             @Override
@@ -170,6 +171,10 @@ public class MainService extends Service {
             public void onMessage(WebSocket webSocket, String text) {
                 System.out.println("client onMessage");
                 System.out.println("message:" + text);
+				if(null != messageLister){
+					messageLister.onRcvMessage(text);
+				}
+				
             }
             @Override
             public void onClosing(WebSocket webSocket, int code, String reason) {
@@ -207,6 +212,22 @@ public class MainService extends Service {
             }
         };
         mTimer.schedule(timerTask, 0, 1000);
-    }
+    }                
+
+	public static WebSocket getWebSocket(){
+		if(mWebSocket == null){
+            initWebSocket();
+		}
+		return mWebSocket;
+	}
+	
+	public static void setCallBackListener(MessageCallBackListener listener){
+		messageLister = listener;
+	}
+	
+	public interface MessageCallBackListener {
+		
+		void onRcvMessage(String text);
+	}
 }
 

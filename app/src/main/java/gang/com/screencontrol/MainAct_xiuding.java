@@ -21,6 +21,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import gang.com.screencontrol.bean.DeviceBean;
 import gang.com.screencontrol.fragment.Device_Fragment;
 import gang.com.screencontrol.fragment.Grouping_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment;
@@ -74,8 +75,8 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         //这就是单例模式的好处，不用多次声明对象
         mFragmentsjidngdian.add(Model_Fragment.getInstance());
         mFragmentsjidngdian.add(Grouping_Fragment.getInstance());
-        mFragmentsjidngdian.add(Device_Fragment.getInstance());
         mFragmentsjidngdian.add(Media_Fragment.getInstance());
+        mFragmentsjidngdian.add(Device_Fragment.getInstance());
         mFragmentsjidngdian.add(Message_Fragment.getInstance());
         mAdapterJingdian = new FragmentPagerAdapter(getSupportFragmentManager()) {
 

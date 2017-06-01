@@ -13,6 +13,11 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -34,7 +39,9 @@ import butterknife.Unbinder;
 import gang.com.screencontrol.MainAct_xiuding;
 import gang.com.screencontrol.MainActivity;
 import gang.com.screencontrol.R;
+import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
+import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -48,7 +55,7 @@ import okhttp3.WebSocketListener;
  * http://www.open-open.com/lib/view/open1476778263175.html----两种方法实现websocket
  */
 
-public class Login_Fragment_one extends Fragment {
+public class Login_Fragment_one extends Fragment implements MainService.MessageCallBackListener {
     //长连接的建立
     static OkHttpClient mOkHttpClient;
     public int msgCount;
@@ -92,8 +99,18 @@ public class Login_Fragment_one extends Fragment {
             case R.id.image_login1_zidonglogin:
                 break;
             case R.id.button_login1:
-                initWebSocket();
-
+                WebSocket webSocket = MainService.getWebSocket();
+                if (null != webSocket) {
+                    MainService.setCallBackListener(this);
+                    webSocket.send("    {\n" +
+                            "       \"body\" : {\n" +
+                            "          \"userName\" : \"Admin\",\n" +
+                            "          \"userPassword\" : \"admin\"\n" +
+                            "       },\n" +
+                            "       \"guid\" : \"M-0\",\n" +
+                            "       \"type\" : \"QUERYUSERLOGIN\"\n" +
+                            "    }");
+                }
                 break;
         }
     }
@@ -105,108 +122,8 @@ public class Login_Fragment_one extends Fragment {
     }
 
 
-    private void initWebSocket() {
-        X509TrustManager xtm = new X509TrustManager() {
-            @Override
-            public void checkClientTrusted(X509Certificate[] chain, String authType) {
-            }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] chain, String authType) {
-            }
-
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                X509Certificate[] x509Certificates = new X509Certificate[0];
-                return x509Certificates;
-            }
-        };
-
-        SSLContext sslContext = null;
-        try {
-            sslContext = SSLContext.getInstance("SSL");
-
-            sslContext.init(null, new TrustManager[]{xtm}, new SecureRandom());
-
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (KeyManagementException e) {
-            e.printStackTrace();
-        }
-        HostnameVerifier DO_NOT_VERIFY = new HostnameVerifier() {
-            @Override
-            public boolean verify(String hostname, SSLSession session) {
-                return true;
-            }
-        };
-
-        mOkHttpClient = new OkHttpClient.Builder()
-                .sslSocketFactory(sslContext.getSocketFactory())
-                .hostnameVerifier(DO_NOT_VERIFY)
-                .readTimeout(3000, TimeUnit.SECONDS)//设置读取超时时间
-                .writeTimeout(3000, TimeUnit.SECONDS)//设置写的超时时间
-                .connectTimeout(3000, TimeUnit.SECONDS)//设置连接超时时间
-                .build();
-
-
-        Request request = new Request.Builder().url("wss://192.168.10.168:7681").build();
-
-        //建立连接
-        mOkHttpClient.newWebSocket(request, new WebSocketListener() {
-            @Override
-            public void onOpen(WebSocket webSocket, Response response) {
-                mWebSocket = webSocket;
-                System.out.println("client onOpen");
-                System.out.println("client request header:" + response.request().headers());
-                System.out.println("client response header:" + response.headers());
-                System.out.println("client response:" + response);
-                //开启消息定时发送
-                if (mWebSocket == null) {
-                    System.out.println("message:啦dasd啦kong啦阿拉");
-                } else {
-                    mWebSocket.send("    {\n" +
-                            "       \"body\" : {\n" +
-                            "          \"userName\" : \"Admin\",\n" +
-                            "          \"userPassword\" : \"admin\"\n" +
-                            "       },\n" +
-                            "       \"guid\" : \"M-0\",\n" +
-                            "       \"type\" : \"QUERYUSERLOGIN\"\n" +
-                            "    }");
-                }
-
-            }
-
-            @Override
-            public void onMessage(WebSocket webSocket, String text) {
-                System.out.println("client onMessage");
-                StartActivity(MainAct_xiuding.class);
-                LogUtil.d("登录界面接收数据", text);
-            }
-
-            @Override
-            public void onClosing(WebSocket webSocket, int code, String reason) {
-                System.out.println("client onClosing");
-                System.out.println("code:" + code + " reason:" + reason);
-            }
-
-            @Override
-            public void onClosed(WebSocket webSocket, int code, String reason) {
-                System.out.println("client onClosed");
-                System.out.println("code:" + code + " reason:" + reason);
-            }
-
-            @Override
-            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-                //出现异常会进入此回调
-                System.out.println("client onFailure");
-                System.out.println("throwable:" + t);
-                System.out.println("response:" + response);
-            }
-        });
-    }
-
     //每秒发送一条消息
-    private void startTask(final WebSocket webSocket) {
+   /* private void startTask(final WebSocket webSocket) {
         Timer mTimer = new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -226,6 +143,26 @@ public class Login_Fragment_one extends Fragment {
             }
         };
         mTimer.schedule(timerTask, 0, 30000);
-    }
+    }*/
 
+    @Override
+    public void onRcvMessage(final String text) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                LogUtil.d("哈哈哈", text);
+                try {
+                    JSONObject loginobject = new JSONObject(text);
+                    if ( loginobject.getString("type").equals("QUERYUSERLOGIN")) {
+                        StartActivity(MainAct_xiuding.class);
+                    } else {
+                        ToastUtil.show(getActivity(), "请输入正确的账号和密码");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+    }
 }

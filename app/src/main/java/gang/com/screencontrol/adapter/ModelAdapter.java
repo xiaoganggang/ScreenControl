@@ -11,14 +11,14 @@ import gang.com.screencontrol.bean.MobelBean;
  * Created by xiaogangzai on 2017/5/31.
  */
 
-public class ModelAdapter extends BaseSimpleAdapter<MobelBean.BodyBean.BasicInfoBean> {
+public class ModelAdapter extends BaseSimpleAdapter<MobelBean.BasicInfoBean> {
 
-    public ModelAdapter(Context context, List<MobelBean.BodyBean.BasicInfoBean> dates) {
+    public ModelAdapter(Context context, List<MobelBean.BasicInfoBean> dates) {
         super(context, dates, R.layout.item_model);
     }
 
     @Override
-    public void bindData(BaseViewHolder viewHolder, MobelBean.BodyBean.BasicInfoBean basicInfoBean) {
+    public void bindData(BaseViewHolder viewHolder, MobelBean.BasicInfoBean basicInfoBean) {
         viewHolder.getTextView(R.id.model_name).setText(basicInfoBean.getName());
         viewHolder.getImageView(R.id.model_pc).setBackgroundResource(R.mipmap.model_moren);
     }

@@ -9,125 +9,59 @@ import java.util.List;
 public class MobelBean {
 
 
-    /**
-     * body : {"basicInfo":[{"ID":125,"description":"","name":"few","playtime":300},{"ID":172,"description":"ff","name":"fe","playtime":300},{"ID":174,"description":"fw","name":"dew","playtime":30},{"ID":183,"description":"","name":"ge","playtime":300},{"ID":191,"description":"Test 1","name":"Test1","playtime":300},{"ID":195,"description":"Add Model","name":"Mode1","playtime":300}]}
-     * category : 0
-     * errorCode : 0
-     * errorStr : OK
-     * guid : M-18
-     * type : SEARCHPROGRAMBASICINFO
-     */
+    private List<BasicInfoBean> basicInfo;
 
-    private BodyBean body;
-    private int category;
-    private int errorCode;
-    private String errorStr;
-    private String guid;
-    private String type;
-
-    public BodyBean getBody() {
-        return body;
+    public List<BasicInfoBean> getBasicInfo() {
+        return basicInfo;
     }
 
-    public void setBody(BodyBean body) {
-        this.body = body;
+    public void setBasicInfo(List<BasicInfoBean> basicInfo) {
+        this.basicInfo = basicInfo;
     }
 
-    public int getCategory() {
-        return category;
-    }
+    public static class BasicInfoBean {
+        /**
+         * ID : 266
+         * description :
+         * name : 测试
+         * playtime : 300
+         */
 
-    public void setCategory(int category) {
-        this.category = category;
-    }
+        private int ID;
+        private String description;
+        private String name;
+        private int playtime;
 
-    public int getErrorCode() {
-        return errorCode;
-    }
-
-    public void setErrorCode(int errorCode) {
-        this.errorCode = errorCode;
-    }
-
-    public String getErrorStr() {
-        return errorStr;
-    }
-
-    public void setErrorStr(String errorStr) {
-        this.errorStr = errorStr;
-    }
-
-    public String getGuid() {
-        return guid;
-    }
-
-    public void setGuid(String guid) {
-        this.guid = guid;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public static class BodyBean {
-        private List<BasicInfoBean> basicInfo;
-
-        public List<BasicInfoBean> getBasicInfo() {
-            return basicInfo;
+        public int getID() {
+            return ID;
         }
 
-        public void setBasicInfo(List<BasicInfoBean> basicInfo) {
-            this.basicInfo = basicInfo;
+        public void setID(int ID) {
+            this.ID = ID;
         }
 
-        public static class BasicInfoBean {
-            /**
-             * ID : 125
-             * description :
-             * name : few
-             * playtime : 300
-             */
+        public String getDescription() {
+            return description;
+        }
 
-            private int ID;
-            private String description;
-            private String name;
-            private int playtime;
+        public void setDescription(String description) {
+            this.description = description;
+        }
 
-            public int getID() {
-                return ID;
-            }
+        public String getName() {
+            return name;
+        }
 
-            public void setID(int ID) {
-                this.ID = ID;
-            }
+        public void setName(String name) {
+            this.name = name;
+        }
 
-            public String getDescription() {
-                return description;
-            }
+        public int getPlaytime() {
+            return playtime;
+        }
 
-            public void setDescription(String description) {
-                this.description = description;
-            }
-
-            public String getName() {
-                return name;
-            }
-
-            public void setName(String name) {
-                this.name = name;
-            }
-
-            public int getPlaytime() {
-                return playtime;
-            }
-
-            public void setPlaytime(int playtime) {
-                this.playtime = playtime;
-            }
+        public void setPlaytime(int playtime) {
+            this.playtime = playtime;
         }
     }
 }
