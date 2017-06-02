@@ -45,7 +45,10 @@ public class MainService extends Service {
     //长连接的建立
     static OkHttpClient mOkHttpClient;
     public static WebSocket mWebSocket;
-	private static MessageCallBackListener messageLister;
+    private static MessageCallBackListener messageLister;
+    private static String adress;
+    private static String port;
+
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
@@ -95,7 +98,11 @@ public class MainService extends Service {
                 .build();
         notification.flags = Notification.FLAG_SHOW_LIGHTS;
         startForeground(1, notification);
-        initWebSocket();
+
+       /* adress = intent.getStringExtra("adress");
+        port = intent.getStringExtra("port");*/
+
+        initWebSocket(adress, port);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -109,7 +116,7 @@ public class MainService extends Service {
         unregisterReceiver(mBR);
     }
 
-    private static void initWebSocket() {
+    public static void initWebSocket(String adress, String port) {
         //屏蔽安全证书的代码
         X509TrustManager xtm = new X509TrustManager() {
             @Override
@@ -144,7 +151,7 @@ public class MainService extends Service {
                 return true;
             }
         };
-         //网络请求
+        //网络请求
         mOkHttpClient = new OkHttpClient.Builder()
                 .sslSocketFactory(sslContext.getSocketFactory())
                 .hostnameVerifier(DO_NOT_VERIFY)
@@ -153,7 +160,7 @@ public class MainService extends Service {
                 .connectTimeout(3000, TimeUnit.SECONDS)//设置连接超时时间
                 .build();
 
-
+        //Request request = new Request.Builder().url("wss://" + adress + ":" + port).build();
         Request request = new Request.Builder().url("wss://192.168.10.168:7681").build();
         //建立连接
         mOkHttpClient.newWebSocket(request, new WebSocketListener() {
@@ -167,25 +174,29 @@ public class MainService extends Service {
                 //开启消息定时发送
                 startTask(mWebSocket);
             }
+
             @Override
             public void onMessage(WebSocket webSocket, String text) {
                 System.out.println("client onMessage");
                 System.out.println("message:" + text);
-				if(null != messageLister){
-					messageLister.onRcvMessage(text);
-				}
-				
+                if (null != messageLister) {
+                    messageLister.onRcvMessage(text);
+                }
+
             }
+
             @Override
             public void onClosing(WebSocket webSocket, int code, String reason) {
                 System.out.println("client onClosing");
                 System.out.println("code:" + code + " reason:" + reason);
             }
+
             @Override
             public void onClosed(WebSocket webSocket, int code, String reason) {
                 System.out.println("client onClosed");
                 System.out.println("code:" + code + " reason:" + reason);
             }
+
             @Override
             public void onFailure(WebSocket webSocket, Throwable t, Response response) {
                 //出现异常会进入此回调
@@ -195,13 +206,14 @@ public class MainService extends Service {
             }
         });
     }
+
     //每秒发送一条消息
-    private static void startTask(final WebSocket mWebSocket){
-        Timer mTimer= new Timer();
+    private static void startTask(final WebSocket mWebSocket) {
+        Timer mTimer = new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                if(mWebSocket == null) return;
+                if (mWebSocket == null) return;
                 boolean isSuccessed = mWebSocket.send("{\n" +
                         "     \"body\" : \"\",\n" +
                         "     \"guid\" : \"\",\n" +
@@ -211,23 +223,23 @@ public class MainService extends Service {
                 //boolean send(ByteString bytes);
             }
         };
-        mTimer.schedule(timerTask, 0, 1000);
-    }                
+        mTimer.schedule(timerTask, 0, 10);
+    }
 
-	public static WebSocket getWebSocket(){
-		if(mWebSocket == null){
-            initWebSocket();
-		}
-		return mWebSocket;
-	}
-	
-	public static void setCallBackListener(MessageCallBackListener listener){
-		messageLister = listener;
-	}
-	
-	public interface MessageCallBackListener {
-		
-		void onRcvMessage(String text);
-	}
+    public static WebSocket getWebSocket() {
+        if (mWebSocket == null) {
+            initWebSocket(adress, port);
+        }
+        return mWebSocket;
+    }
+
+    public static void setCallBackListener(MessageCallBackListener listener) {
+        messageLister = listener;
+    }
+
+    public interface MessageCallBackListener {
+
+        void onRcvMessage(String text);
+    }
 }
 

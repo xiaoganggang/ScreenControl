@@ -188,7 +188,7 @@
                 android:layout_width="13dp"
                 android:layout_height="13dp"
                 android:layout_marginLeft="10dp"
-                android:background="@mipmap/login_checkbox_checkmark" />
+                android:background="@drawable/login_checkboxbg" />
         </LinearLayout>
 
         <LinearLayout
@@ -210,7 +210,7 @@
                 android:layout_width="13dp"
                 android:layout_height="13dp"
                 android:layout_marginLeft="10dp"
-                android:background="@mipmap/login_checkbox_checkmark" />
+                android:background="@drawable/login_checkboxbg"/>
         </LinearLayout>
 
     </LinearLayout>

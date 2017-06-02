@@ -18,6 +18,12 @@ public class DeviceAdapter extends BaseSimpleAdapter<DeviceBean> {
 
     @Override
     public void bindData(BaseViewHolder viewHolder, DeviceBean deviceBean) {
-
+        viewHolder.getTextView(R.id.item_device_name).setText(deviceBean.getName());
+        //getType是1手机设备，2是电脑设备
+        if (deviceBean.getType() == 1) {
+            viewHolder.getImageView(R.id.item_device_pc).setBackgroundResource(R.mipmap.device_phone);
+        } else if (deviceBean.getType() == 2) {
+            viewHolder.getImageView(R.id.item_device_pc).setBackgroundResource(R.mipmap.device_computer);
+        }
     }
 }

@@ -11,10 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +19,6 @@ import gang.com.screencontrol.R;
 import gang.com.screencontrol.adapter.BaseAdapter;
 import gang.com.screencontrol.adapter.MediaAdapter;
 import gang.com.screencontrol.bean.MediaBean;
-import gang.com.screencontrol.bean.MobelBean;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
@@ -63,7 +58,7 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
             MainService.setCallBackListener(this);
             webSocket.send("    {\n" +
                     "       \"body\" : {\n" +
-                    "          \"parentID\" : 3\n" +
+                    "          \"parentID\" : 11\n" +
                     "       },\n" +
                     "       \"guid\" : \"M-36\",\n" +
                     "       \"type\" : \"GETCHILDMEDIAFOLDERLIST\"\n" +

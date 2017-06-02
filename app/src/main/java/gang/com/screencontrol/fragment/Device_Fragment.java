@@ -24,7 +24,6 @@ import gang.com.screencontrol.R;
 import gang.com.screencontrol.adapter.BaseAdapter;
 import gang.com.screencontrol.adapter.DeviceAdapter;
 import gang.com.screencontrol.bean.DeviceBean;
-import gang.com.screencontrol.bean.MobelBean;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
@@ -88,6 +87,27 @@ public class Device_Fragment extends Fragment implements MainService.MessageCall
 
     @Override
     public void onRcvMessage(final String text) {
-        LogUtil.d("获取的所有设备list",text);
+        //LogUtil.d("获取的所有设备list",text);
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    JSONObject allmodelobject = new JSONObject(text);
+                    if (allmodelobject.getString("type").equals("GETDEVICETYPEFOLDERLIST")) {
+                        String bodystring = allmodelobject.getString("body");
+                        JSONObject basicInfoboj = new JSONObject(bodystring);
+                        basicInfoboj.getString("deviceFolderInfo");
+                        LogUtil.d("获取的所有设备list", basicInfoboj.getString("deviceFolderInfo"));
+                      List<DeviceBean> ps = gson.fromJson(basicInfoboj.getString("deviceFolderInfo"), new TypeToken<List<DeviceBean>>() {
+                        }.getType());
+                        data = ps;
+                        showView();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
     }
 }

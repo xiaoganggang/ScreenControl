@@ -20,11 +20,13 @@
         android:orientation="vertical">
 
         <ImageView
-            android:id="@+id/model_pc"
+            android:id="@+id/item_device_pc"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@mipmap/startupicon" />
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -34,7 +36,7 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/device_name"
+                android:id="@+id/item_device_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingLeft="5dp"

@@ -20,15 +20,21 @@ public abstract class BaseAdapter<T, H extends BaseViewHolder> extends RecyclerV
     protected Context context;
     protected int mLayoutResId;
     private OnItemClickListener listener;
+    private OnItemLongClickListener listenerlong;
 
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
+    }
+    public void setOnItemLongClickListener(OnItemLongClickListener listenerlong) {
+        this.listenerlong = listenerlong;
     }
 
     public interface OnItemClickListener {
         void onClick(View v, int position);
     }
-
+    public interface OnItemLongClickListener {
+        void onClick(View v, int position);
+    }
     public BaseAdapter(Context context, List<T> dates, int mLayoutResId) {
         this.mDatas = dates;
         this.context = context;
@@ -39,7 +45,7 @@ public abstract class BaseAdapter<T, H extends BaseViewHolder> extends RecyclerV
     @Override
     public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(mLayoutResId, parent, false);
-        BaseViewHolder vh = new BaseViewHolder(view,listener);
+        BaseViewHolder vh = new BaseViewHolder(view,listener,listenerlong);
         // View view = mInflater.inflate(mLayoutResId, parent, false);
         return vh;
     }

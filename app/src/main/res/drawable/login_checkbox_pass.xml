@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <item android:state_enabled="true" android:state_checked="true" android:state_pressed="true"
+        android:drawable="@drawable/login_checkboxbg" />
+    <item android:state_enabled="true" android:state_checked="false" android:state_pressed="true"
+        android:drawable="@drawable/login_checkbox_checkmark" />
+    <item android:state_enabled="true" android:state_checked="true"
+        android:drawable="@drawable/login_checkboxbg" />
+    <item android:state_enabled="true" android:state_checked="false"
+        android:drawable="@drawable/login_checkboxbg" />
+    <item android:state_enabled="false" android:state_checked="true"
+        android:drawable="@drawable/login_checkboxbg" />
+    <item android:state_enabled="false" android:state_checked="false"
+        android:drawable="@drawable/login_checkboxbg" />
+
+</selector>

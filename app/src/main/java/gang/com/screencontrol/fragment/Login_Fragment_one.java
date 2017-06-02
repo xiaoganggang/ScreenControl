@@ -99,6 +99,11 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
             case R.id.image_login1_zidonglogin:
                 break;
             case R.id.button_login1:
+                //点击登录按钮首先要连接websocket，开启这个服务
+              /*  Intent i = new Intent(getActivity(), MainService.class);
+                i.putExtra("adress", editLogin1Dizhi.getText().toString());
+                i.putExtra("port", editLogin1Duankou.getText().toString());
+                getActivity().startService(i);*/
                 WebSocket webSocket = MainService.getWebSocket();
                 if (null != webSocket) {
                     MainService.setCallBackListener(this);
@@ -110,6 +115,8 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                             "       \"guid\" : \"M-0\",\n" +
                             "       \"type\" : \"QUERYUSERLOGIN\"\n" +
                             "    }");
+                } else {
+                    ToastUtil.show(getActivity(), "输入的端口和账号有误或检查服务器是否开启");
                 }
                 break;
         }
@@ -153,10 +160,10 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                 LogUtil.d("哈哈哈", text);
                 try {
                     JSONObject loginobject = new JSONObject(text);
-                    if ( loginobject.getString("type").equals("QUERYUSERLOGIN")) {
+                    if (loginobject.getString("type").equals("QUERYUSERLOGIN")) {
                         StartActivity(MainAct_xiuding.class);
                     } else {
-                        ToastUtil.show(getActivity(), "请输入正确的账号和密码");
+                        //ToastUtil.show(getActivity(), "请输入正确的账号和密码");
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();

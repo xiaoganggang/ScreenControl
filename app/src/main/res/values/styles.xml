@@ -24,4 +24,19 @@
 
         <item name="android:singleLine">true</item>
     </style>
+
+    <!--课表点击第一个Dialog的主题设计-->
+    <style name="dialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowFrame">@null</item>
+        <!-- Dialog的边框，@null标识无 -->
+        <item name="android:windowIsFloating">@null</item>
+        <!-- 是否浮现在activity之上 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 无标题 -->
+        <item name="android:windowIsTranslucent">false</item>
+        <!-- 无背景颜色 -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 背景透明 -->
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
 </resources>

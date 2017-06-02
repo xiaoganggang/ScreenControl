@@ -1,6 +1,7 @@
 package gang.com.screencontrol;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -14,6 +15,7 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -27,8 +29,10 @@ import gang.com.screencontrol.fragment.Grouping_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment;
 import gang.com.screencontrol.fragment.Message_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment;
+import gang.com.screencontrol.service.MainService;
+import okhttp3.WebSocket;
 
-public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener {
+public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener, MainService.MessageCallBackListener {
     /**
      * 代表选项卡下的下划线的imageview
      */
@@ -62,6 +66,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     private List<Fragment> mFragmentsjidngdian;
     private FragmentPagerAdapter mAdapterJingdian;
     private LinearLayout linearLayout_caidan;
+    private ImageView clock, weather, refresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +118,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
             public void onPageScrollStateChanged(int index) {
             }
         });
+
     }
 
     private void initView() {
@@ -126,6 +132,8 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         device.setOnClickListener(this);
         message = (TextView) findViewById(R.id.message);
         message.setOnClickListener(this);
+        clock = (ImageView) findViewById(R.id.clock);
+        clock.setOnClickListener(this);
     }
 
     private void initImageView() {
@@ -167,6 +175,9 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.message:
                 setSelect(4);
+                break;
+            case R.id.clock:
+                show_model_dialog();
                 break;
             default:
                 break;
@@ -212,5 +223,49 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         media.setAlpha(1f);
         device.setAlpha(1f);
         message.setAlpha(1f);
+    }
+
+    //显示dialog，是否添加闹钟
+    private void show_model_dialog() {
+        final Dialog dialog_model = new Dialog(MainAct_xiuding.this, R.style.dialog);
+        dialog_model.setContentView(R.layout.dialog_clockl);
+       /* mDialoginit.setCanceledOnTouchOutside(false);// 设置点击屏幕Dialog不消失
+        mDialoginit.setCancelable(false);
+        // 显示dialog的时候按返回键也不能
+        mDialoginit.setOnKeyListener(new DialogInterface.OnKeyListener() {
+            public boolean onKey(DialogInterface dialog, int keyCode,
+                                 KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_SEARCH) {
+                    return true;
+                } else {
+                    return false;// 默认返回 false
+                }
+            }
+        });*/
+        Button dialog_model_delete = (Button) dialog_model.findViewById(R.id.dialog_clock_add);
+        dialog_model_delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //接口回调，调用发送websocket接口
+                WebSocket webSocket = MainService.getWebSocket();
+                if (null != webSocket) {
+                    MainService.setCallBackListener(MainAct_xiuding.this);
+                    webSocket.send("");
+                }
+            }
+        });
+        Button dialog_close = (Button) dialog_model.findViewById(R.id.dialog_clock_close);
+        dialog_close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog_model.cancel();
+            }
+        });
+        dialog_model.show();
+    }
+
+    @Override
+    public void onRcvMessage(String text) {
+
     }
 }
