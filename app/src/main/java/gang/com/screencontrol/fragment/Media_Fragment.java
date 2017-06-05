@@ -11,6 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +22,9 @@ import java.util.List;
 import gang.com.screencontrol.R;
 import gang.com.screencontrol.adapter.BaseAdapter;
 import gang.com.screencontrol.adapter.MediaAdapter;
-import gang.com.screencontrol.bean.MediaBean;
+import gang.com.screencontrol.bean.MediaBean_child;
+import gang.com.screencontrol.bean.MediaBean_childdetial;
+import gang.com.screencontrol.bean.Mediabean_childfolder;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
@@ -32,7 +38,9 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
     public static Media_Fragment instance = null;//给代码加一个单例模式
     private RecyclerView recyle_media;
     private MediaAdapter mediaadapter;
-    private List<MediaBean> mdata = new ArrayList<>();
+    private List<Mediabean_childfolder.BodyBean.FolderInfoBean> mediabean_childfolders = new ArrayList<>();
+    private List<MediaBean_childdetial> mdata_child_detial = new ArrayList<>();
+    private List<MediaBean_child.BodyBean.InfolistBean> mdata_child = new ArrayList<>();
     private Gson gson = new Gson();
 
     public static Media_Fragment getInstance() {
@@ -47,27 +55,33 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_fragment_media, container, false);
         recyle_media = (RecyclerView) view.findViewById(R.id.recyle_media);
-        getData();
+        //请求所有文件中的子文件
+        getData("    {\n" +
+                "       \"body\" : {\n" +
+                "          \"parentID\" : 0\n" +
+                "       },\n" +
+                "       \"guid\" : \"M-36\",\n" +
+                "       \"type\" : \"GETCHILDMEDIAFOLDERLIST\"\n" +
+                "    }");
         return view;
     }
 
-    private void getData() {
+    /**
+     * 公共请求的方法
+     *
+     * @param request
+     */
+    private void getData(String request) {
         //接口回调，调用发送websocket接口
         WebSocket webSocket = MainService.getWebSocket();
         if (null != webSocket) {
             MainService.setCallBackListener(this);
-            webSocket.send("    {\n" +
-                    "       \"body\" : {\n" +
-                    "          \"parentID\" : 11\n" +
-                    "       },\n" +
-                    "       \"guid\" : \"M-36\",\n" +
-                    "       \"type\" : \"GETCHILDMEDIAFOLDERLIST\"\n" +
-                    "    }");
+            webSocket.send(request);
         }
     }
 
     private void showRecyleview() {
-        mediaadapter = new MediaAdapter(getActivity(), mdata);
+        mediaadapter = new MediaAdapter(getActivity(), mdata_child_detial);
         recyle_media.setAdapter(mediaadapter);
         recyle_media.setLayoutManager(new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.HORIZONTAL));
         recyle_media.setItemAnimator(new DefaultItemAnimator());
@@ -82,29 +96,64 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
 
     @Override
     public void onRcvMessage(final String text) {
-        LogUtil.d("获取的所有媒体list", text);
-       /* getActivity().runOnUiThread(new Runnable() {
+        getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                LogUtil.d("获取的所有媒体list", text);
                 try {
                     JSONObject allmodelobject = new JSONObject(text);
+                    //一次遍历
                     if (allmodelobject.getString("type").equals("GETCHILDMEDIAFOLDERLIST")) {
                         String bodystring = allmodelobject.getString("body");
                         JSONObject basicInfoboj = new JSONObject(bodystring);
-                        LogUtil.d("获取的所有媒体list", basicInfoboj.getString("folderInfo"));
-                        *//*List<MobelBean.BasicInfoBean> ps = gson.fromJson(basicInfoboj.getString("basicInfo"), new TypeToken<List<MobelBean.BasicInfoBean>>() {
+                        mediabean_childfolders = gson.fromJson(basicInfoboj.getString("folderInfo"), new TypeToken<List<Mediabean_childfolder.BodyBean.FolderInfoBean>>() {
                         }.getType());
-                        datalist = ps;
-                        showView();*//*
+
+                        for (int i = 0; i < mediabean_childfolders.size(); i++) {
+                            mediabean_childfolders.get(i).getFolderID();
+                            getData("{\n" +
+                                    "   \"body\" : {\n" +
+                                    "      \"id\" :"
+                                    + mediabean_childfolders.get(i).getFolderID() + ",\n" +
+                                    "      \"keyword\" : \"\"\n" +
+                                    "   },\n" +
+                                    "   \"guid\" : \"M-42\",\n" +
+                                    "   \"type\" : \"GETMEDIAFILELIST\"\n" +
+                                    "}");
+
+
+                            LogUtil.d("7777777", mediabean_childfolders.get(i).getFolderID() + "");
+                        }
+                        //二次遍历
+                    } else if (allmodelobject.getString("type").equals("GETMEDIAFILELIST") || allmodelobject.getString("guid").equals("M-42")) {
+                        String bodystring = allmodelobject.getString("body");
+                        JSONObject basicInfoboj = new JSONObject(bodystring);
+                        mdata_child = gson.fromJson(basicInfoboj.getString("infolist"), new TypeToken<List<MediaBean_child.BodyBean.InfolistBean>>() {
+                        }.getType());
+                        for (int i = 0; i < mdata_child.size(); i++) {
+                            mdata_child.get(i).getFileId();
+                            getData("{\n" +
+                                    "   \"body\" : {\n" +
+                                    "      \"idlist\" : ["
+                                    + mdata_child.get(i).getFileId() + "]\n" +
+                                    "   },\n" +
+                                    "   \"guid\" : \"M-48\",\n" +
+                                    "   \"type\" : \"GETMEDIAFILEINFO\"\n" +
+                                    "}");
+                            LogUtil.d("获取的所有媒体list子文件夹List信息", mdata_child.get(i).getFileId() + "呵呵呵");
+                        }
+
+                        LogUtil.d("获取的所有媒体list子文件夹List信息", text + "呵呵呵");
+                    } else if (allmodelobject.getString("type").equals("GETMEDIAFILEINFO")) {
+                        LogUtil.d("获取的所有媒体list子文件夹的单个详细信息", text + "呵呵呵");
+                        String bodystring = allmodelobject.getString("body");
+                        mdata_child_detial = gson.fromJson(bodystring, new TypeToken<List<MediaBean_childdetial>>() {
+                        }.getType());
+                        showRecyleview();
                     }
-
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
-*/
     }
 }

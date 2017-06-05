@@ -233,6 +233,7 @@
                     android:background="@mipmap/clock" />
 
                 <ImageView
+                    android:id="@+id/weather"
                     android:layout_width="38dp"
                     android:layout_height="38dp"
                     android:layout_marginLeft="15dp"

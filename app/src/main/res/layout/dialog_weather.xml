@@ -15,7 +15,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:padding="4dp"
-            android:text="确定添加时钟吗"
+            android:text="确定添加天气吗"
             android:textSize="20dp" />
 
         <LinearLayout
@@ -26,7 +26,7 @@
             android:orientation="vertical">
 
             <Button
-                android:id="@+id/dialog_clock_add"
+                android:id="@+id/dialog_weather_add"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -34,7 +34,7 @@
                 android:textSize="18dp" />
 
             <Button
-                android:id="@+id/dialog_clock_close"
+                android:id="@+id/dialog_weather_close"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
