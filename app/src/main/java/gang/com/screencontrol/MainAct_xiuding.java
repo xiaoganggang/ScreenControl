@@ -13,8 +13,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Layout;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
@@ -25,9 +23,7 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.xiaopo.flying.sticker.DrawableSticker;
-import com.xiaopo.flying.sticker.Sticker;
 import com.xiaopo.flying.sticker.StickerView;
-import com.xiaopo.flying.sticker.TextSticker;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -396,10 +392,20 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     public void OnAddMediaView(MediaBean_childdetial mediaBean_childdetial) {
         jiekouhuidiao.setText(mediaBean_childdetial.getFileName());
         //同时在这里执行view添加到StickView的操作
-        Drawable drawable =
-                ContextCompat.getDrawable(this, R.drawable.starticon276);
-        final DrawableSticker sticker = new DrawableSticker(drawable);
-        stickerView.addSticker(sticker);
+        if (mediaBean_childdetial.getFolderId()==11)
+        {
+            Drawable drawable =
+                    ContextCompat.getDrawable(this, R.mipmap.video);
+            final DrawableSticker sticker = new DrawableSticker(drawable);
+            stickerView.addSticker(sticker);
+        }else if (mediaBean_childdetial.getFolderId()==12)
+        {
+            Drawable drawable =
+                    ContextCompat.getDrawable(this, R.mipmap.image);
+            final DrawableSticker sticker = new DrawableSticker(drawable);
+            stickerView.addSticker(sticker);
+        }
+
     }
 
     @Override

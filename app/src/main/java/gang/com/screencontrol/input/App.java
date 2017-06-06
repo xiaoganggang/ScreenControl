@@ -5,6 +5,10 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.core.ImagePipelineConfig;
+import com.facebook.imagepipeline.decoder.SimpleProgressiveJpegConfig;
+
 import gang.com.screencontrol.service.MainService;
 
 /**
@@ -21,6 +25,11 @@ public class App extends Application {
         instances = this;
         //流氓方法，强制打开蓝牙
         applicationContext = getApplicationContext();
+        //渐进式图片加载的配置
+        ImagePipelineConfig config = ImagePipelineConfig.newBuilder(this)
+                .setProgressiveJpegConfig(new SimpleProgressiveJpegConfig())
+                .build();
+        Fresco.initialize(this);
         Intent i = new Intent(this, MainService.class);
         this.startService(i);
 
