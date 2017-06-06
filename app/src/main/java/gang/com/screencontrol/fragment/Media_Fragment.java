@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import gang.com.screencontrol.MainAct_xiuding;
 import gang.com.screencontrol.R;
 import gang.com.screencontrol.adapter.BaseAdapter;
 import gang.com.screencontrol.adapter.MediaAdapter;
@@ -28,6 +29,7 @@ import gang.com.screencontrol.bean.Mediabean_childfolder;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
+import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.WebSocket;
 
 /**
@@ -42,6 +44,7 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
     private List<MediaBean_childdetial> mdata_child_detial = new ArrayList<>();
     private List<MediaBean_child.BodyBean.InfolistBean> mdata_child = new ArrayList<>();
     private Gson gson = new Gson();
+    private static  MediaAddCallBackListener mymediaaddListener1;
 
     public static Media_Fragment getInstance() {
         if (instance == null) {
@@ -89,13 +92,18 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
         mediaadapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener() {
             @Override
             public void onClick(View v, int position) {
-
+                ToastUtil.show(getActivity(),"媒体item点击事件");
+                if (null != mymediaaddListener1) {
+                    //将点击事件传递给回调函数
+                    mymediaaddListener1.OnAddMediaView(mdata_child_detial.get(position));
+                }
             }
         });
     }
 
     @Override
     public void onRcvMessage(final String text) {
+        LogUtil.d("获取的所有媒体list", text);
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -119,8 +127,6 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
                                     "   \"guid\" : \"M-42\",\n" +
                                     "   \"type\" : \"GETMEDIAFILELIST\"\n" +
                                     "}");
-
-
                             LogUtil.d("7777777", mediabean_childfolders.get(i).getFolderID() + "");
                         }
                         //二次遍历
@@ -146,8 +152,8 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
                     } else if (allmodelobject.getString("type").equals("GETMEDIAFILEINFO")) {
                         LogUtil.d("获取的所有媒体list子文件夹的单个详细信息", text + "呵呵呵");
                         String bodystring = allmodelobject.getString("body");
-                        mdata_child_detial = gson.fromJson(bodystring, new TypeToken<List<MediaBean_childdetial>>() {
-                        }.getType());
+                        MediaBean_childdetial msg = gson.fromJson(bodystring, MediaBean_childdetial.class);
+                        mdata_child_detial.add(msg);
                         showRecyleview();
                     }
                 } catch (JSONException e) {
@@ -155,5 +161,22 @@ public class Media_Fragment extends Fragment implements MainService.MessageCallB
                 }
             }
         });
+    }
+
+    /**
+     * 用于注册回调事件
+     */
+    public static void SetMediaAddListener(MediaAddCallBackListener mymediaaddListener) {
+        mymediaaddListener1 = mymediaaddListener;
+    }
+
+    /**
+     * 定义一个接口
+     * 方法参数是传递点击item的详细数据
+     *
+     * @author fox
+     */
+    public interface MediaAddCallBackListener {
+        void OnAddMediaView(MediaBean_childdetial mediaBean_childdetial);
     }
 }

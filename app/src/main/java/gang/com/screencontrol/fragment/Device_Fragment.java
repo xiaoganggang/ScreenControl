@@ -87,7 +87,7 @@ public class Device_Fragment extends Fragment implements MainService.MessageCall
 
     @Override
     public void onRcvMessage(final String text) {
-        //LogUtil.d("获取的所有设备list",text);
+        LogUtil.d("获取的所有设备list",text);
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

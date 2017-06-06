@@ -1,12 +1,15 @@
 package gang.com.screencontrol.bean;
 
 
+import java.io.Serializable;
+
 /**
  * Created by xiaogangzai on 2017/6/1.
  * 每个媒体子文件中中子文件详细内容
+ * 序列化的类需要传递对象
  */
 
-public class MediaBean_childdetial {
+public class MediaBean_childdetial implements Serializable {
     private int fileId;
     private int folderId;
     private String InLocalPath;

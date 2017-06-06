@@ -5,11 +5,16 @@ import android.app.Dialog;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Layout;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
@@ -17,10 +22,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.xiaopo.flying.sticker.DrawableSticker;
+import com.xiaopo.flying.sticker.Sticker;
+import com.xiaopo.flying.sticker.StickerView;
+import com.xiaopo.flying.sticker.TextSticker;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,7 +35,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import gang.com.screencontrol.bean.MobelBean;
+import gang.com.screencontrol.bean.MediaBean_childdetial;
 import gang.com.screencontrol.fragment.Device_Fragment;
 import gang.com.screencontrol.fragment.Grouping_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment;
@@ -39,7 +46,7 @@ import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.WebSocket;
 
-public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener, MainService.MessageCallBackListener {
+public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener, MainService.MessageCallBackListener, Media_Fragment.MediaAddCallBackListener {
     /**
      * 代表选项卡下的下划线的imageview
      */
@@ -75,12 +82,21 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     private LinearLayout linearLayout_caidan;
     private ImageView clock, weather, refresh;
     private Gson gson = new Gson();
-
+    private TextView jiekouhuidiao;
+    private Media_Fragment.MediaAddCallBackListener mediaAddCallBackListener;
+    private StickerView stickerView;
+    private static final  String TAG="MainAct_xiuding";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_act_xiuding);
+        jiekouhuidiao = (TextView) findViewById(R.id.jiekouhuidiao);
         mViewPagerjingdian = (ViewPager) findViewById(R.id.jingdianviewpager);
+        stickerView = (StickerView) findViewById(R.id.sticker_view);
+        stickerView.setBackgroundColor(Color.WHITE);
+        stickerView.setLocked(false);
+        stickerView.setConstrained(true);
+
         initImageView();
         initView();
         final TextView[] titles = {model, group, media, device, message};
@@ -91,6 +107,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         mFragmentsjidngdian.add(Media_Fragment.getInstance());
         mFragmentsjidngdian.add(Device_Fragment.getInstance());
         mFragmentsjidngdian.add(Message_Fragment.getInstance());
+
         mAdapterJingdian = new FragmentPagerAdapter(getSupportFragmentManager()) {
 
             public int getCount() {
@@ -126,7 +143,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
             public void onPageScrollStateChanged(int index) {
             }
         });
-
+        mViewPagerjingdian.setCurrentItem(0);
     }
 
     private void initView() {
@@ -369,5 +386,25 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                 }
             }
         });
+    }
+
+    /**
+     * 媒体添加接口回调的方法重写
+     * @param mediaBean_childdetial
+     */
+    @Override
+    public void OnAddMediaView(MediaBean_childdetial mediaBean_childdetial) {
+        jiekouhuidiao.setText(mediaBean_childdetial.getFileName());
+        //同时在这里执行view添加到StickView的操作
+        Drawable drawable =
+                ContextCompat.getDrawable(this, R.drawable.starticon276);
+        final DrawableSticker sticker = new DrawableSticker(drawable);
+        stickerView.addSticker(sticker);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Media_Fragment.SetMediaAddListener(this);
     }
 }

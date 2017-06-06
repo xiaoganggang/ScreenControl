@@ -103,6 +103,7 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
 
     @Override
     public void onRcvMessage(final String text) {
+        LogUtil.d("获取的所有模式list", text);
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
