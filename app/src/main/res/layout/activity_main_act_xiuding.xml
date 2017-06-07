@@ -24,6 +24,7 @@
             android:id="@+id/jiekouhuidiao"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:text="接口回调好使不"
             android:textColor="#FFFFFF" />
 
@@ -35,8 +36,15 @@
             <!-- custom, maybe you will like to put an ImageView-->
             <ImageView
                 android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <TextView
+                android:id="@+id/model_add_window"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                />
+                android:gravity="center"
+                android:text="暂 无 模 式"
+                android:textSize="60dp" />
         </com.xiaopo.flying.sticker.StickerView>
     </LinearLayout>
 
@@ -152,15 +160,17 @@
                         android:background="@mipmap/close" />
 
                     <ImageView
+                        android:id="@+id/start_remote_control"
                         android:layout_width="38dp"
                         android:layout_height="38dp"
-                        android:layout_marginLeft="10dp"
+                        android:layout_marginLeft="20dp"
                         android:background="@mipmap/screencontrol" />
 
                     <ImageView
+                        android:id="@+id/startlock"
                         android:layout_width="38dp"
                         android:layout_height="38dp"
-                        android:layout_marginLeft="10dp"
+                        android:layout_marginLeft="20dp"
                         android:background="@mipmap/startlock" />
                 </LinearLayout>
             </RelativeLayout>

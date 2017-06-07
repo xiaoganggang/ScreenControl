@@ -2,11 +2,12 @@ package gang.com.screencontrol;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import gang.com.screencontrol.bean.MediaBean_childdetial;
+import gang.com.screencontrol.bean.MobelBean;
 import gang.com.screencontrol.fragment.Device_Fragment;
 import gang.com.screencontrol.fragment.Grouping_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment;
@@ -42,7 +44,7 @@ import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.WebSocket;
 
-public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener, MainService.MessageCallBackListener, Media_Fragment.MediaAddCallBackListener {
+public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener, MainService.MessageCallBackListener, Media_Fragment.MediaAddCallBackListener, Model_Fragment.ModelAddCallBackListener {
     /**
      * 代表选项卡下的下划线的imageview
      */
@@ -77,11 +79,20 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     private FragmentPagerAdapter mAdapterJingdian;
     private LinearLayout linearLayout_caidan;
     private ImageView clock, weather, refresh;
+    private WebSocket webSocket;
     private Gson gson = new Gson();
     private TextView jiekouhuidiao;
-    private Media_Fragment.MediaAddCallBackListener mediaAddCallBackListener;
     private StickerView stickerView;
-    private static final  String TAG="MainAct_xiuding";
+    private static final String TAG = "MainAct_xiuding";
+    private ImageView startlock;
+    //窗口锁定状态，0是锁住状态，1是开锁状态
+    private int LOCKSTATE = 0;
+
+    //判读显示窗口当前是否有模式存在,默认是0没有模式，1是有模式
+    private int modeljudge_state = 0;
+    private TextView model_add_window;
+    private ImageView start_remote_control;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,7 +103,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         stickerView.setBackgroundColor(Color.WHITE);
         stickerView.setLocked(false);
         stickerView.setConstrained(true);
-
+        initWebsocket();
         initImageView();
         initView();
         final TextView[] titles = {model, group, media, device, message};
@@ -142,6 +153,19 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         mViewPagerjingdian.setCurrentItem(0);
     }
 
+    /**
+     * 接口回调，获取websocket
+     */
+    private void initWebsocket() {
+        //接口回调，调用发送websocket接口
+        webSocket = MainService.getWebSocket();
+        if (null != webSocket) {
+            MainService.setCallBackListener(MainAct_xiuding.this);
+        } else {
+            ToastUtil.show(MainAct_xiuding.this, "websocket连接错误");
+        }
+    }
+
     private void initView() {
         model = (TextView) findViewById(R.id.model);
         model.setOnClickListener(this);
@@ -157,6 +181,11 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         clock.setOnClickListener(this);
         weather = (ImageView) findViewById(R.id.weather);
         weather.setOnClickListener(this);
+        startlock = (ImageView) findViewById(R.id.startlock);
+        startlock.setOnClickListener(this);
+        model_add_window = (TextView) findViewById(R.id.model_add_window);
+        start_remote_control = (ImageView) findViewById(R.id.start_remote_control);
+        start_remote_control.setOnClickListener(this);
     }
 
     private void initImageView() {
@@ -205,9 +234,37 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
             case R.id.weather:
                 show_weather_dialog();
                 break;
+            //增加模式到播放列表
+            case R.id.startlock:
+                ToastUtil.show(MainAct_xiuding.this, "点击了");
+                if (LOCKSTATE == 0) {
+                    LOCKSTATE = 1;
+                } else {
+                    LOCKSTATE = 0;
+                }
+                break;
+            case R.id.start_remote_control:
+                Intent a = new Intent(this, RemoteControlAct.class);
+                startActivity(a);
+                break;
             default:
                 break;
         }
+    }
+
+    /**
+     * 开启窗口
+     */
+    private void start_window() {
+        webSocket.send("    {\n" +
+                "       \"body\" : {\n" +
+                "          \"programID\" : 1605,\n" +
+                "          \"sceneID\" : 256,\n" +
+                "          \"type\" : \"AddProgram\"\n" +
+                "       },\n" +
+                "       \"guid\" : \"M-90\",\n" +
+                "       \"type\" : \"OPERATEFAVORITEPROGRAM\"\n" +
+                "    }");
     }
 
     private void setSelect(int i) {
@@ -259,39 +316,34 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         dialog_model_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //接口回调，调用发送websocket接口
-                WebSocket webSocket = MainService.getWebSocket();
-                if (null != webSocket) {
-                    MainService.setCallBackListener(MainAct_xiuding.this);
-                    webSocket.send("    {\n" +
-                            "       \"body\" : {\n" +
-                            "          \"clock\" : {\n" +
-                            "             \"countdowndatatime\" : \"00:10:00\",\n" +
-                            "             \"iscountdownclock\" : false,\n" +
-                            "             \"language\" : true,\n" +
-                            "             \"showAnalogClock\" : false,\n" +
-                            "             \"showDate\" : true,\n" +
-                            "             \"showDigitalClock\" : true,\n" +
-                            "             \"showIn24Hours\" : false,\n" +
-                            "             \"showbackground\" : false\n" +
-                            "          },\n" +
-                            "          \"height\" : 400,\n" +
-                            "          \"slaveID\" : 100,\n" +
-                            "          \"slave_scale_height\" : 0.370370,\n" +
-                            "          \"slave_scale_width\" : 0.1250,\n" +
-                            "          \"slave_scale_x\" : 0.0,\n" +
-                            "          \"slave_scale_y\" : 0.0,\n" +
-                            "          \"type\" : 0,\n" +
-                            "          \"widgetPositionXML\" : \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" ?>\\n<Root>\\n    <X>0</X>\\n    <Y>0</Y>\\n    <Width>400</Width>\\n    <Height>400</Height>\\n    <Slave ID=\\\"100\\\">\\n        <X>0</X>\\n        <Y>0</Y>\\n        <Width>0.125</Width>\\n        <Height>0.37037</Height>\\n    </Slave>\\n</Root>\\n\",\n" +
-                            "          \"width\" : 400,\n" +
-                            "          \"x\" : 0,\n" +
-                            "          \"y\" : 0,\n" +
-                            "          \"zorder\" : 1501\n" +
-                            "       },\n" +
-                            "       \"guid\" : \"M-117\",\n" +
-                            "       \"type\" : \"ADDWIDGET\"\n" +
-                            "    }");
-                }
+                webSocket.send("    {\n" +
+                        "       \"body\" : {\n" +
+                        "          \"clock\" : {\n" +
+                        "             \"countdowndatatime\" : \"00:10:00\",\n" +
+                        "             \"iscountdownclock\" : false,\n" +
+                        "             \"language\" : true,\n" +
+                        "             \"showAnalogClock\" : false,\n" +
+                        "             \"showDate\" : true,\n" +
+                        "             \"showDigitalClock\" : true,\n" +
+                        "             \"showIn24Hours\" : false,\n" +
+                        "             \"showbackground\" : false\n" +
+                        "          },\n" +
+                        "          \"height\" : 400,\n" +
+                        "          \"slaveID\" : 100,\n" +
+                        "          \"slave_scale_height\" : 0.370370,\n" +
+                        "          \"slave_scale_width\" : 0.1250,\n" +
+                        "          \"slave_scale_x\" : 0.0,\n" +
+                        "          \"slave_scale_y\" : 0.0,\n" +
+                        "          \"type\" : 0,\n" +
+                        "          \"widgetPositionXML\" : \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" ?>\\n<Root>\\n    <X>0</X>\\n    <Y>0</Y>\\n    <Width>400</Width>\\n    <Height>400</Height>\\n    <Slave ID=\\\"100\\\">\\n        <X>0</X>\\n        <Y>0</Y>\\n        <Width>0.125</Width>\\n        <Height>0.37037</Height>\\n    </Slave>\\n</Root>\\n\",\n" +
+                        "          \"width\" : 400,\n" +
+                        "          \"x\" : 0,\n" +
+                        "          \"y\" : 0,\n" +
+                        "          \"zorder\" : 1501\n" +
+                        "       },\n" +
+                        "       \"guid\" : \"M-117\",\n" +
+                        "       \"type\" : \"ADDWIDGET\"\n" +
+                        "    }");
             }
         });
         Button dialog_close = (Button) dialog_clock.findViewById(R.id.dialog_clock_close);
@@ -312,44 +364,39 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         dialog_model_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //接口回调，调用发送websocket接口
-                WebSocket webSocket = MainService.getWebSocket();
-                if (null != webSocket) {
-                    MainService.setCallBackListener(MainAct_xiuding.this);
-                    webSocket.send("    {\n" +
-                            "       \"body\" : {\n" +
-                            "          \"height\" : 400,\n" +
-                            "          \"slaveID\" : 100,\n" +
-                            "          \"slave_scale_height\" : 0.370370,\n" +
-                            "          \"slave_scale_width\" : 0.1250,\n" +
-                            "          \"slave_scale_x\" : 0.0,\n" +
-                            "          \"slave_scale_y\" : 0.0,\n" +
-                            "          \"type\" : 1,\n" +
-                            "          \"weather\" : {\n" +
-                            "             \"city\" : \"Shanghai\",\n" +
-                            "             \"highTemperature\" : \"20\",\n" +
-                            "             \"language\" : \"zh-CN\",\n" +
-                            "             \"lowTemperature\" : \"10\",\n" +
-                            "             \"proxyIP\" : \"\",\n" +
-                            "             \"proxyPort\" : \"\",\n" +
-                            "             \"temperFormat\" : \"C\",\n" +
-                            "             \"useProxy\" : false,\n" +
-                            "             \"useTrans\" : false,\n" +
-                            "             \"weatherImage\" : \"32d.png\",\n" +
-                            "             \"weatherName\" : \"Weather\",\n" +
-                            "             \"weatherTitle\" : \"tornado\",\n" +
-                            "             \"woeid\" : \"2151849\"\n" +
-                            "          },\n" +
-                            "          \"widgetPositionXML\" : \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" ?>\\n<Root>\\n    <X>0</X>\\n    <Y>0</Y>\\n    <Width>400</Width>\\n    <Height>400</Height>\\n    <Slave ID=\\\"100\\\">\\n        <X>0</X>\\n        <Y>0</Y>\\n        <Width>0.125</Width>\\n        <Height>0.37037</Height>\\n    </Slave>\\n</Root>\\n\",\n" +
-                            "          \"width\" : 400,\n" +
-                            "          \"x\" : 0,\n" +
-                            "          \"y\" : 0,\n" +
-                            "          \"zorder\" : 1501\n" +
-                            "       },\n" +
-                            "       \"guid\" : \"M-31\",\n" +
-                            "       \"type\" : \"ADDWIDGET\"\n" +
-                            "    }");
-                }
+                webSocket.send("    {\n" +
+                        "       \"body\" : {\n" +
+                        "          \"height\" : 400,\n" +
+                        "          \"slaveID\" : 100,\n" +
+                        "          \"slave_scale_height\" : 0.370370,\n" +
+                        "          \"slave_scale_width\" : 0.1250,\n" +
+                        "          \"slave_scale_x\" : 0.0,\n" +
+                        "          \"slave_scale_y\" : 0.0,\n" +
+                        "          \"type\" : 1,\n" +
+                        "          \"weather\" : {\n" +
+                        "             \"city\" : \"Shanghai\",\n" +
+                        "             \"highTemperature\" : \"20\",\n" +
+                        "             \"language\" : \"zh-CN\",\n" +
+                        "             \"lowTemperature\" : \"10\",\n" +
+                        "             \"proxyIP\" : \"\",\n" +
+                        "             \"proxyPort\" : \"\",\n" +
+                        "             \"temperFormat\" : \"C\",\n" +
+                        "             \"useProxy\" : false,\n" +
+                        "             \"useTrans\" : false,\n" +
+                        "             \"weatherImage\" : \"32d.png\",\n" +
+                        "             \"weatherName\" : \"Weather\",\n" +
+                        "             \"weatherTitle\" : \"tornado\",\n" +
+                        "             \"woeid\" : \"2151849\"\n" +
+                        "          },\n" +
+                        "          \"widgetPositionXML\" : \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" ?>\\n<Root>\\n    <X>0</X>\\n    <Y>0</Y>\\n    <Width>400</Width>\\n    <Height>400</Height>\\n    <Slave ID=\\\"100\\\">\\n        <X>0</X>\\n        <Y>0</Y>\\n        <Width>0.125</Width>\\n        <Height>0.37037</Height>\\n    </Slave>\\n</Root>\\n\",\n" +
+                        "          \"width\" : 400,\n" +
+                        "          \"x\" : 0,\n" +
+                        "          \"y\" : 0,\n" +
+                        "          \"zorder\" : 1501\n" +
+                        "       },\n" +
+                        "       \"guid\" : \"M-31\",\n" +
+                        "       \"type\" : \"ADDWIDGET\"\n" +
+                        "    }");
             }
         });
         Button dialog_close = (Button) dialog_weather.findViewById(R.id.dialog_weather_close);
@@ -376,6 +423,9 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                         ToastUtil.show(MainAct_xiuding.this, "时钟添加成功");
                     } else if (allmodelobject.getString("type").equals("ADDWIDGET") && allmodelobject.getString("guid").equals("M-31")) {
                         ToastUtil.show(MainAct_xiuding.this, "天气添加成功");
+                    }//增加模式到播放列表
+                    else if (allmodelobject.getString("type").equals("OPERATEFAVORITEPROGRAM")) {
+
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -384,22 +434,28 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Media_Fragment.SetMediaAddListener(this);
+        Model_Fragment.SetModelAddListener(this);
+    }
+
     /**
      * 媒体添加接口回调的方法重写
+     *
      * @param mediaBean_childdetial
      */
     @Override
     public void OnAddMediaView(MediaBean_childdetial mediaBean_childdetial) {
         jiekouhuidiao.setText(mediaBean_childdetial.getFileName());
         //同时在这里执行view添加到StickView的操作
-        if (mediaBean_childdetial.getFolderId()==11)
-        {
+        if (mediaBean_childdetial.getFolderId() == 11) {
             Drawable drawable =
                     ContextCompat.getDrawable(this, R.mipmap.video);
             final DrawableSticker sticker = new DrawableSticker(drawable);
             stickerView.addSticker(sticker);
-        }else if (mediaBean_childdetial.getFolderId()==12)
-        {
+        } else if (mediaBean_childdetial.getFolderId() == 12) {
             Drawable drawable =
                     ContextCompat.getDrawable(this, R.mipmap.image);
             final DrawableSticker sticker = new DrawableSticker(drawable);
@@ -408,9 +464,32 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
 
     }
 
+    /**
+     * 模式添加的接口回调
+     *
+     * @param modelbean
+     * @param mobel_list
+     */
     @Override
-    protected void onResume() {
-        super.onResume();
-        Media_Fragment.SetMediaAddListener(this);
+    public void OnAddModelView(View v, MobelBean.BasicInfoBean modelbean, List<MobelBean.BasicInfoBean> mobel_list) {
+        //显示窗中没有模式,且是开锁状态
+        if (LOCKSTATE == 1) {
+            if (modeljudge_state == 0) {
+                start_window();
+                model_add_window.setText("模 式:" + modelbean.getName());
+                modeljudge_state = 1;
+            } else {
+                Snackbar.make(v, "显示窗已有模式确认要替换吗?", Snackbar.LENGTH_LONG)
+                        .setAction("确认", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                            }
+                        }).show();
+            }
+        } else {
+            Snackbar.make(v, "请先解锁", Snackbar.LENGTH_LONG)
+                    .show();
+        }
+
     }
 }

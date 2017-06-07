@@ -26,6 +26,7 @@ import java.util.List;
 import gang.com.screencontrol.R;
 import gang.com.screencontrol.adapter.BaseAdapter;
 import gang.com.screencontrol.adapter.ModelAdapter;
+import gang.com.screencontrol.bean.MediaBean_childdetial;
 import gang.com.screencontrol.bean.MobelBean;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
 import gang.com.screencontrol.service.MainService;
@@ -47,6 +48,8 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
     private int pitchid;
     //item的position值
     private int positionvalue;
+    private static ModelAddCallBackListener modelAddCallBackListener;
+
     //长连接的建立
     public static Model_Fragment getInstance() {
         if (instance == null) {
@@ -87,15 +90,19 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
         modelAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener() {
             @Override
             public void onClick(View v, int position) {
-
+                ToastUtil.show(getActivity(), "点击事件");
+                if (null != modelAddCallBackListener) {
+                    //将点击事件传递给回调函数
+                    modelAddCallBackListener.OnAddModelView(v,datalist.get(position),datalist);
+                }
             }
         });
         modelAdapter.setOnItemLongClickListener(new BaseAdapter.OnItemLongClickListener() {
             @Override
             public void onClick(View v, int position) {
                 pitchid = datalist.get(position).getID();
-                positionvalue=position;
-                ToastUtil.show(getActivity(), "长按事件");
+                positionvalue = position;
+                ToastUtil.show(getActivity(), "长按事件删除事件");
                 show_model_dialog();
             }
         });
@@ -124,7 +131,7 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
                         //mobel_recyle.scrollToPosition(0);
                         datalist.remove(positionvalue);
                         modelAdapter.notifyItemRemoved(positionvalue);
-                        modelAdapter.notifyItemRangeChanged(0,datalist.size()-1);
+                        modelAdapter.notifyItemRangeChanged(0, datalist.size() - 1);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -179,5 +186,25 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
             }
         });
         dialog_model.show();
+    }
+    /**
+     * 模式将点击事件回传到Activity
+     */
+
+    /**
+     * 用于注册回调事件
+     */
+    public static void SetModelAddListener(ModelAddCallBackListener mymediaaddListener) {
+        modelAddCallBackListener = mymediaaddListener;
+    }
+
+    /**
+     * 定义一个接口
+     * 方法参数是传递点击item的详细数据
+     *
+     * @author fox
+     */
+    public interface ModelAddCallBackListener {
+        void OnAddModelView(View v,MobelBean.BasicInfoBean modelbean,List<MobelBean.BasicInfoBean> mobel_list);
     }
 }

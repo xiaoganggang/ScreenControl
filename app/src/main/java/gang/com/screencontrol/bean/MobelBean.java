@@ -1,12 +1,13 @@
 package gang.com.screencontrol.bean;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by xiaogangzai on 2017/5/31.
  */
 
-public class MobelBean {
+public class MobelBean implements Serializable {
 
 
     private List<BasicInfoBean> basicInfo;
@@ -19,7 +20,7 @@ public class MobelBean {
         this.basicInfo = basicInfo;
     }
 
-    public static class BasicInfoBean {
+    public static class BasicInfoBean implements Serializable {
         /**
          * ID : 266
          * description :

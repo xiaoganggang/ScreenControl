@@ -63,10 +63,10 @@ public class Message_Fragment extends Fragment implements MainService.MessageCal
             MainService.setCallBackListener(this);
             webSocket.send("    {\n" +
                     "       \"body\" : {\n" +
-                    "          \"idlist\" : [ 12 ]\n" +
+                    "          \"keyWords\" : \"messag\"\n" +
                     "       },\n" +
-                    "       \"guid\" : \"M-48\",\n" +
-                    "       \"type\" : \"GETMEDIAFILEINFO\"\n" +
+                    "       \"guid\" : \"M-91\",\n" +
+                    "       \"type\" : \"QUERYMESSAGE\"\n" +
                     "    }");
         }
     }

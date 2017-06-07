@@ -35,7 +35,9 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".MainAct_xiuding"></activity>
+        <activity android:name=".MainAct_xiuding" />
+        <activity android:name=".RemoteControlAct"
+            android:theme="@style/myTransparent"></activity>
     </application>
 
 </manifest>
