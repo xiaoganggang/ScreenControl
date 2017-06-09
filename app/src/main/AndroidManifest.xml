@@ -18,7 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+
             android:name=".LoginActivity"
+            android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,6 +30,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustPan" />
 
         <service
@@ -35,9 +38,13 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".MainAct_xiuding" />
-        <activity android:name=".RemoteControlAct"
-            android:theme="@style/myTransparent"></activity>
+        <activity
+            android:name=".MainAct_xiuding"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name=".RemoteControlAct"
+            android:screenOrientation="landscape"
+            android:theme="@style/myTransparent" />
     </application>
 
 </manifest>

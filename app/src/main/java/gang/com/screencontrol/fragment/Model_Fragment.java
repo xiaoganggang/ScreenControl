@@ -79,8 +79,6 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
                     "    }");
         }
     }
-
-
     private void showView() {
         modelAdapter = new ModelAdapter(getActivity(), datalist);
         mobel_recyle.setAdapter(modelAdapter);
@@ -93,7 +91,7 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
                 ToastUtil.show(getActivity(), "点击事件");
                 if (null != modelAddCallBackListener) {
                     //将点击事件传递给回调函数
-                    modelAddCallBackListener.OnAddModelView(v,datalist.get(position),datalist);
+                    modelAddCallBackListener.OnAddModelView(v, datalist.get(position), datalist);
                 }
             }
         });
@@ -131,7 +129,7 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
                         //mobel_recyle.scrollToPosition(0);
                         datalist.remove(positionvalue);
                         modelAdapter.notifyItemRemoved(positionvalue);
-                        modelAdapter.notifyItemRangeChanged(0, datalist.size() - 1);
+                        modelAdapter.notifyItemRangeChanged(0, datalist.size());//此处第二个参数不减一，会素数组越界的
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -205,6 +203,6 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
      * @author fox
      */
     public interface ModelAddCallBackListener {
-        void OnAddModelView(View v,MobelBean.BasicInfoBean modelbean,List<MobelBean.BasicInfoBean> mobel_list);
+        void OnAddModelView(View v, MobelBean.BasicInfoBean modelbean, List<MobelBean.BasicInfoBean> mobel_list);
     }
 }
