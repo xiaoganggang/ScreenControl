@@ -25,6 +25,7 @@ import gang.com.screencontrol.adapter.MessageAdapter;
 import gang.com.screencontrol.bean.MessageBean;
 import gang.com.screencontrol.bean.MobelBean;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
+import gang.com.screencontrol.potting.BaseFragment;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
 import okhttp3.WebSocket;
@@ -33,7 +34,7 @@ import okhttp3.WebSocket;
  * Created by xiaogangzai on 2017/5/31.
  */
 
-public class Message_Fragment extends Fragment implements MainService.MessageCallBackListener {
+public class Message_Fragment extends BaseFragment implements MainService.MessageCallBackListener {
     public static Message_Fragment instance = null;//给代码加一个单例模式
     private RecyclerView recycler_message;
     private MessageAdapter messageadapter;
@@ -46,13 +47,22 @@ public class Message_Fragment extends Fragment implements MainService.MessageCal
         }
         return instance;
     }
-
+    /**
+     * 标志位，标志已经初始化完成
+     */
+    private boolean isPrepared;
+    /**
+     * 是否已被加载过一次，第二次就不再去请求数据了
+     */
+    private boolean mHasLoadedOnce;
+    private WebSocket webSocket;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_fragment_message, container, false);
         recycler_message = (RecyclerView) view.findViewById(R.id.recyle_message);
-        getData();
+        isPrepared=true;
+        lazyLoad();
         return view;
     }
 
@@ -63,7 +73,7 @@ public class Message_Fragment extends Fragment implements MainService.MessageCal
             MainService.setCallBackListener(this);
             webSocket.send("    {\n" +
                     "       \"body\" : {\n" +
-                    "          \"keyWords\" : \"messag\"\n" +
+                    "          \"keyWords\" : \""+"1"+"\"\n" +
                     "       },\n" +
                     "       \"guid\" : \"M-91\",\n" +
                     "       \"type\" : \"QUERYMESSAGE\"\n" +
@@ -88,7 +98,7 @@ public class Message_Fragment extends Fragment implements MainService.MessageCal
     @Override
     public void onRcvMessage(final String text) {
         LogUtil.d("获取的所有消息list", text);
-      /*  getActivity().runOnUiThread(new Runnable() {
+       getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -98,9 +108,9 @@ public class Message_Fragment extends Fragment implements MainService.MessageCal
                         JSONObject basicInfoboj = new JSONObject(bodystring);
                         basicInfoboj.getString("messageItemInfo");
                         LogUtil.d("获取的所有消息list", basicInfoboj.getString("messageItemInfo"));
-                      *//*  List<MobelBean.BasicInfoBean> ps = gson.fromJson(basicInfoboj.getString("messageItemInfo"), new TypeToken<List<MobelBean.BasicInfoBean>>() {
+                       List<MessageBean> ps = gson.fromJson(basicInfoboj.getString("messageItemInfo"), new TypeToken<List<MobelBean.BasicInfoBean>>() {
                         }.getType());
-                        datalist = ps;*//*
+                        mdata = ps;
                         showView();
                     }
 
@@ -109,6 +119,14 @@ public class Message_Fragment extends Fragment implements MainService.MessageCal
                     e.printStackTrace();
                 }
             }
-        });*/
+        });
+    }
+
+    @Override
+    protected void lazyLoad() {
+        if (!isPrepared || !isVisible || mHasLoadedOnce) {
+            return;
+        }
+        getData();
     }
 }

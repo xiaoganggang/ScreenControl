@@ -54,7 +54,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
      * 是否已被加载过一次，第二次就不再去请求数据了
      */
     private boolean mHasLoadedOnce;
-
+    private WebSocket webSocket;
     public static Media_Fragment getInstance() {
         if (instance == null) {
             instance = new Media_Fragment();
@@ -68,27 +68,27 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
         View view = inflater.inflate(R.layout.layout_fragment_media, container, false);
         recyle_media = (RecyclerView) view.findViewById(R.id.recyle_media);
         //请求所有文件中的子文件
-        getData("    {\n" +
-                "       \"body\" : {\n" +
-                "          \"parentID\" : 0\n" +
-                "       },\n" +
-                "       \"guid\" : \"M-36\",\n" +
-                "       \"type\" : \"GETCHILDMEDIAFOLDERLIST\"\n" +
-                "    }");
+        isPrepared=true;
+        lazyLoad();
+
         return view;
     }
 
     /**
      * 公共请求的方法
-     *
-     * @param request
      */
-    private void getData(String request) {
+    private void getData() {
         //接口回调，调用发送websocket接口
-        WebSocket webSocket = MainService.getWebSocket();
+         webSocket = MainService.getWebSocket();
         if (null != webSocket) {
             MainService.setCallBackListener(this);
-            webSocket.send(request);
+            webSocket.send("    {\n" +
+                    "       \"body\" : {\n" +
+                    "          \"parentID\" : 0\n" +
+                    "       },\n" +
+                    "       \"guid\" : \"M-36\",\n" +
+                    "       \"type\" : \"GETCHILDMEDIAFOLDERLIST\"\n" +
+                    "    }");
         }
     }
 
@@ -127,7 +127,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
 
                         for (int i = 0; i < mediabean_childfolders.size(); i++) {
                             mediabean_childfolders.get(i).getFolderID();
-                            getData("{\n" +
+                            webSocket.send("{\n" +
                                     "   \"body\" : {\n" +
                                     "      \"id\" :"
                                     + mediabean_childfolders.get(i).getFolderID() + ",\n" +
@@ -147,7 +147,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
                         for (int i = 0; i < mdata_child.size(); i++) {
                             LogUtil.d("获取的所有媒体list子文件夹List信息", mdata_child.get(i).getFileId() + "11111￥￥￥￥￥");
                             mdata_child.get(i).getFileId();
-                            getData("{\n" +
+                            webSocket.send("{\n" +
                                     "   \"body\" : {\n" +
                                     "      \"idlist\" : ["
                                     + mdata_child.get(i).getFileId() + "]\n" +
@@ -162,6 +162,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
                         String bodystring = allmodelobject.getString("body");
                         MediaBean_childdetial msg = gson.fromJson(bodystring, MediaBean_childdetial.class);
                         mdata_child_detial.add(msg);
+                        mHasLoadedOnce = true;
                         showRecyleview();
                     }
                 } catch (JSONException e) {
@@ -183,7 +184,10 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
      */
     @Override
     protected void lazyLoad() {
-
+        if (!isPrepared || !isVisible || mHasLoadedOnce) {
+            return;
+        }
+        getData();
     }
 
     /**

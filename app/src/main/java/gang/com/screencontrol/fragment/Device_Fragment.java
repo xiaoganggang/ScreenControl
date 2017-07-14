@@ -25,6 +25,7 @@ import gang.com.screencontrol.adapter.BaseAdapter;
 import gang.com.screencontrol.adapter.DeviceAdapter;
 import gang.com.screencontrol.bean.DeviceBean;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
+import gang.com.screencontrol.potting.BaseFragment;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
 import okhttp3.WebSocket;
@@ -33,32 +34,40 @@ import okhttp3.WebSocket;
  * Created by xiaogangzai on 2017/5/31.
  */
 
-public class Device_Fragment extends Fragment implements MainService.MessageCallBackListener {
+public class Device_Fragment extends BaseFragment implements MainService.MessageCallBackListener {
     public static Device_Fragment instance = null;
     private RecyclerView recycler_device;
     private DeviceAdapter deviceadapter;
     private List<DeviceBean> data = new ArrayList<>();
     private Gson gson = new Gson();
-
+    private WebSocket webSocket;
     public static Device_Fragment getInstance() {
         if (instance == null) {
             instance = new Device_Fragment();
         }
         return instance;
     }
-
+    /**
+     * 标志位，标志已经初始化完成
+     */
+    private boolean isPrepared;
+    /**
+     * 是否已被加载过一次，第二次就不再去请求数据了
+     */
+    private boolean mHasLoadedOnce;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_fragment_device, container, false);
         recycler_device = (RecyclerView) view.findViewById(R.id.recyle_device);
-        getData();
+        isPrepared=true;
+        lazyLoad();
         return view;
     }
 
     private void getData() {
         //接口回调，调用发送websocket接口
-        WebSocket webSocket = MainService.getWebSocket();
+         webSocket = MainService.getWebSocket();
         if (null != webSocket) {
             MainService.setCallBackListener(this);
             webSocket.send("    {\n" +
@@ -101,6 +110,7 @@ public class Device_Fragment extends Fragment implements MainService.MessageCall
                       List<DeviceBean> ps = gson.fromJson(basicInfoboj.getString("deviceFolderInfo"), new TypeToken<List<DeviceBean>>() {
                         }.getType());
                         data = ps;
+                        mHasLoadedOnce=true;
                         showView();
                     }
                 } catch (JSONException e) {
@@ -109,5 +119,16 @@ public class Device_Fragment extends Fragment implements MainService.MessageCall
             }
         });
 
+    }
+
+    /**
+     * 取消预加载方法的实现
+     */
+    @Override
+    protected void lazyLoad() {
+        if (!isPrepared || !isVisible || mHasLoadedOnce) {
+            return;
+        }
+        getData();
     }
 }

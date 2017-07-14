@@ -123,6 +123,7 @@ public class Grouping_Fragment extends BaseFragment implements MainService.Messa
                         List<GroupBean> ps = gson.fromJson(basicInfoboj.getString("folderInfo"), new TypeToken<List<GroupBean>>() {
                         }.getType());
                         list_group = ps;
+                        mHasLoadedOnce = true;
                         show_group();
                     }
                 } catch (JSONException e) {
