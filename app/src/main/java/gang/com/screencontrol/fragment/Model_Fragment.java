@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 
 import com.google.gson.Gson;
@@ -29,6 +30,7 @@ import gang.com.screencontrol.adapter.ModelAdapter;
 import gang.com.screencontrol.bean.MediaBean_childdetial;
 import gang.com.screencontrol.bean.MobelBean;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
+import gang.com.screencontrol.potting.BaseFragment;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.util.ToastUtil;
@@ -38,7 +40,7 @@ import okhttp3.WebSocket;
  * Created by xiaogangzai on 2017/5/31.
  */
 
-public class Model_Fragment extends Fragment implements MainService.MessageCallBackListener {
+public class Model_Fragment extends BaseFragment implements MainService.MessageCallBackListener {
     public static Model_Fragment instance = null;//给代码加一个单例模式
     private RecyclerView mobel_recyle;
     private ModelAdapter modelAdapter;
@@ -49,7 +51,7 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
     //item的position值
     private int positionvalue;
     private static ModelAddCallBackListener modelAddCallBackListener;
-
+    private WebSocket webSocket;
     //长连接的建立
     public static Model_Fragment getInstance() {
         if (instance == null) {
@@ -58,18 +60,33 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
         return instance;
     }
 
+    //Fragment预加载问题
+    private long exitTime = 0;
+    /**
+     * 标志位，标志已经初始化完成
+     */
+    private boolean isPrepared;
+    /**
+     * 是否已被加载过一次，第二次就不再去请求数据了
+     */
+    private boolean mHasLoadedOnce;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_fragment_mobel, container, false);
         mobel_recyle = (RecyclerView) view.findViewById(R.id.recyle_model);
-        getData();
+        isPrepared = true;
+        lazyLoad();
         return view;
     }
 
-    private void getData() {
+    /**
+     * 获取模式数据
+     */
+    private void getModelData() {
         //接口回调，调用发送websocket接口
-        WebSocket webSocket = MainService.getWebSocket();
+         webSocket = MainService.getWebSocket();
         if (null != webSocket) {
             MainService.setCallBackListener(this);
             webSocket.send("{\n" +
@@ -79,6 +96,7 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
                     "    }");
         }
     }
+
     private void showView() {
         modelAdapter = new ModelAdapter(getActivity(), datalist);
         mobel_recyle.setAdapter(modelAdapter);
@@ -88,10 +106,17 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
         modelAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener() {
             @Override
             public void onClick(View v, int position) {
-                ToastUtil.show(getActivity(), "点击事件");
                 if (null != modelAddCallBackListener) {
-                    //将点击事件传递给回调函数
-                    modelAddCallBackListener.OnAddModelView(v, datalist.get(position), datalist);
+                    //在一定时间范围内双击事件的实现
+                    if ((System.currentTimeMillis() - exitTime) > 2000) {
+                        //Toast.makeText(getActivity(), "双击选择模式", Toast.LENGTH_SHORT).show();
+                        exitTime = System.currentTimeMillis();
+                    } else {
+                        //将点击事件传递给回调函数
+                        modelAddCallBackListener.OnAddModelView(v, datalist.get(position), datalist);
+                    }
+
+
                 }
             }
         });
@@ -100,7 +125,7 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
             public void onClick(View v, int position) {
                 pitchid = datalist.get(position).getID();
                 positionvalue = position;
-                ToastUtil.show(getActivity(), "长按事件删除事件");
+                ToastUtil.show(getActivity(), "长按事件删除事件"+pitchid+"**"+position);
                 show_model_dialog();
             }
         });
@@ -122,6 +147,7 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
                         List<MobelBean.BasicInfoBean> ps = gson.fromJson(basicInfoboj.getString("basicInfo"), new TypeToken<List<MobelBean.BasicInfoBean>>() {
                         }.getType());
                         datalist = ps;
+                        mHasLoadedOnce = true;
                         showView();
                     } else if (allmodelobject.getString("type").equals("DELETEPROGRAMLIST")) {
                         ToastUtil.show(getActivity(), "删除成功");
@@ -136,33 +162,17 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
                 }
             }
         });
-
     }
 
     private void show_model_dialog() {
         final Dialog dialog_model = new Dialog(getActivity(), R.style.dialog);
         dialog_model.setContentView(R.layout.dialog_model);
-       /* mDialoginit.setCanceledOnTouchOutside(false);// 设置点击屏幕Dialog不消失
-        mDialoginit.setCancelable(false);
-        // 显示dialog的时候按返回键也不能
-        mDialoginit.setOnKeyListener(new DialogInterface.OnKeyListener() {
-            public boolean onKey(DialogInterface dialog, int keyCode,
-                                 KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_SEARCH) {
-                    return true;
-                } else {
-                    return false;// 默认返回 false
-                }
-            }
-        });*/
         Button dialog_model_delete = (Button) dialog_model.findViewById(R.id.dialog_mobel_delete);
         dialog_model_delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ToastUtil.show(getActivity(),"删除按钮"+pitchid);
                 //接口回调，调用发送websocket接口
-                WebSocket webSocket = MainService.getWebSocket();
-                if (null != webSocket) {
-                    MainService.setCallBackListener(getInstance());
                     webSocket.send("{\n" +
                             "   \"body\" : {\n" +
                             "      \"idList\" : [\n" +
@@ -174,7 +184,6 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
                             "   \"type\" : \"DELETEPROGRAMLIST\"\n" +
                             "}");
                 }
-            }
         });
         Button dialog_close = (Button) dialog_model.findViewById(R.id.dialog_model_close);
         dialog_close.setOnClickListener(new View.OnClickListener() {
@@ -194,6 +203,14 @@ public class Model_Fragment extends Fragment implements MainService.MessageCallB
      */
     public static void SetModelAddListener(ModelAddCallBackListener mymediaaddListener) {
         modelAddCallBackListener = mymediaaddListener;
+    }
+
+    @Override
+    protected void lazyLoad() {
+        if (!isPrepared || !isVisible || mHasLoadedOnce) {
+            return;
+        }
+       getModelData();
     }
 
     /**

@@ -30,7 +30,7 @@ public class MediaAdapter extends BaseSimpleAdapter<MediaBean_childdetial> {
         } else if (mediaBean.getFolderId() == 12) {
             //12代表的是图片
             InServerPath = mediaBean.getInServerPath();
-            InServerPath_true = "wss://192.168.10.168:7681" + InServerPath.replace("\\", "/");
+            InServerPath_true = "wss://192.168.10.219:7681" + InServerPath.replace("\\", "/");
             SimpleDraweeView simpleDraweeView = (SimpleDraweeView) viewHolder.getView(R.id.media_pc);
             simpleDraweeView.setImageURI(InServerPath_true);
 
@@ -44,7 +44,6 @@ public class MediaAdapter extends BaseSimpleAdapter<MediaBean_childdetial> {
             SimpleDraweeView simpleDraweeView = (SimpleDraweeView) viewHolder.getView(R.id.media_pc);
             simpleDraweeView.setImageResource(R.mipmap.photokuang);
         }
-
         viewHolder.getTextView(R.id.media_name).setText(mediaBean.getFileName());
     }
 }

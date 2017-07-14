@@ -59,10 +59,6 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setAdapter(mExamplePagerAdapter);
         initMagicIndicator1();
     }
-
-
-
-
     //获取下方的各种数据信息
     private void getDeviceDatalist() {
         DeviceData deviceData = new DeviceData(R.drawable.startupicon, "设备");

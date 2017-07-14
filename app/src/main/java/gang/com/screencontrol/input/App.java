@@ -12,7 +12,7 @@ import com.facebook.imagepipeline.decoder.SimpleProgressiveJpegConfig;
 import gang.com.screencontrol.service.MainService;
 
 /**
- * Created by Administrator on 2017/5/24.
+ * Created by xiaogangzai on 2017/5/24.
  */
 
 public class App extends Application {
@@ -32,7 +32,6 @@ public class App extends Application {
         Fresco.initialize(this);
         Intent i = new Intent(this, MainService.class);
         this.startService(i);
-
     }
 
     //获取上下文全局变量
@@ -49,9 +48,7 @@ public class App extends Application {
 
         for (ActivityManager.RunningAppProcessInfo appProcess : activityManager
                 .getRunningAppProcesses()) {
-
             if (appProcess.pid == pid) {
-
                 return appProcess.processName;
             }
         }

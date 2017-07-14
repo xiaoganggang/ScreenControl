@@ -1,22 +1,19 @@
 package gang.com.screencontrol;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -29,54 +26,34 @@ import com.xiaopo.flying.sticker.StickerView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import gang.com.screencontrol.adapter.ViewPagerAdapter;
 import gang.com.screencontrol.bean.MediaBean_childdetial;
 import gang.com.screencontrol.bean.MobelBean;
-import gang.com.screencontrol.fragment.Device_Fragment;
-import gang.com.screencontrol.fragment.Grouping_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment;
-import gang.com.screencontrol.fragment.Message_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.WebSocket;
 
+/**
+ * BUG请求后返回来的内容总是被那些fragment的onMessage拦截掉
+ */
 public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener, MainService.MessageCallBackListener, Media_Fragment.MediaAddCallBackListener, Model_Fragment.ModelAddCallBackListener {
-    /**
-     * 代表选项卡下的下划线的imageview
-     */
-    private ImageView cursor = null;
-    /**
-     * 选项卡下划线长度
-     */
-    private static int lineWidth = 0;
-
-    /**
-     * 偏移量
-     * （手机屏幕宽度/3-选项卡长度）/2
-     */
-    private static int offset = 0;
-
-    /**
-     * 选项卡总数
-     */
-    private static final int TAB_COUNT = 5;
-    /**
-     * 当前显示的选项卡位置
-     */
-    private int current_index = 0;
-
+    @BindView(R.id.lastmodel)
+    ImageView lastmodel;
+    @BindView(R.id.nextmodel)
+    ImageView nextmodel;
     /**
      * 选项卡标题
      */
-    private TextView model, group, media, device, message;
-
+    private ImageView pause_player;
     private ViewPager mViewPagerjingdian;
-    private List<Fragment> mFragmentsjidngdian;
-    private FragmentPagerAdapter mAdapterJingdian;
     private LinearLayout linearLayout_caidan;
     private ImageView clock, weather, refresh;
     private WebSocket webSocket;
@@ -92,11 +69,15 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     private int modeljudge_state = 0;
     private TextView model_add_window;
     private ImageView start_remote_control;
+    //暂停点击状态pausestate
+    private int pausestate = 0;//暂停是0
+    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_act_xiuding);
+        ButterKnife.bind(this);
         jiekouhuidiao = (TextView) findViewById(R.id.jiekouhuidiao);
         mViewPagerjingdian = (ViewPager) findViewById(R.id.jingdianviewpager);
         stickerView = (StickerView) findViewById(R.id.sticker_view);
@@ -104,53 +85,34 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         stickerView.setLocked(false);
         stickerView.setConstrained(true);
         initWebsocket();
-        initImageView();
+        //加载显示墙信息指令发送
+        loadWallInfo();
         initView();
-        final TextView[] titles = {model, group, media, device, message};
-        mFragmentsjidngdian = new ArrayList<Fragment>();
-        //这就是单例模式的好处，不用多次声明对象
-        mFragmentsjidngdian.add(Model_Fragment.getInstance());
-        mFragmentsjidngdian.add(Grouping_Fragment.getInstance());
-        mFragmentsjidngdian.add(Media_Fragment.getInstance());
-        mFragmentsjidngdian.add(Device_Fragment.getInstance());
-        mFragmentsjidngdian.add(Message_Fragment.getInstance());
+        initViewpage();
+    }
 
-        mAdapterJingdian = new FragmentPagerAdapter(getSupportFragmentManager()) {
+    /**
+     * 加载显示墙信息，看有几块显示墙
+     */
+    private void loadWallInfo() {
+        webSocket.send("    {\n" +
+                "       \"body\" : \"\",\n" +
+                "       \"guid\" : \"M-44\",\n" +
+                "       \"type\" : \"LOADVIDEOWALLINFO\"\n" +
+                "    }");
+    }
 
-            public int getCount() {
-                return mFragmentsjidngdian.size();
-            }
 
-            public Fragment getItem(int position) {
-                return mFragmentsjidngdian.get(position);
-            }
-        };
-        mViewPagerjingdian.setAdapter(mAdapterJingdian);
-        mViewPagerjingdian.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-
-            int one = offset * 5 + lineWidth;// 页卡1 -> 页卡2 偏移量
-
-            @Override
-            public void onPageSelected(int index)//设置标题的颜色以及下划线的移动效果
-            {
-                Animation animation = new TranslateAnimation(one * current_index, one * index, 0, 0);
-                animation.setFillAfter(true);
-                animation.setDuration(300);
-                cursor.startAnimation(animation);
-                titles[current_index].setTextColor(Color.parseColor("#2c2c2c"));
-                titles[index].setTextColor(Color.parseColor("#0195ff"));
-                current_index = index;
-            }
-
-            @Override
-            public void onPageScrolled(int arg0, float arg1, int arg2) {
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int index) {
-            }
-        });
-        mViewPagerjingdian.setCurrentItem(0);
+    private void initViewpage() {
+        PagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        mViewPagerjingdian.setAdapter(adapter);
+        tabLayout.setupWithViewPager(mViewPagerjingdian);
+        //3个page，所以第一个page启动的时候，右侧的page会加载，中间第二个page选中的时候，不会做任何事情，因为左右两侧现在各有一个，第三个page选中的时候，销毁第一个page的视图，
+        //因为现在page3左侧有2个page了，必须销毁远的那个
+        //意思就是说设置当前page左右两侧应该被保持的page数量，超过这个限制，page会被销毁重建（只是销毁视图），onDestroy-onCreateView,但不会执行onDestroy
+        //尽量维持这个值小，特别是有复杂布局的时候，因为如果这个值很大，就会占用很多内存，如果只有3-4page的话，可以全部保持active，可以保持page切换的顺滑
+        mViewPagerjingdian.setOffscreenPageLimit(2);
+        //预加载问题如何取消
     }
 
     /**
@@ -166,17 +128,9 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         }
     }
 
+
     private void initView() {
-        model = (TextView) findViewById(R.id.model);
-        model.setOnClickListener(this);
-        group = (TextView) findViewById(R.id.group);
-        group.setOnClickListener(this);
-        media = (TextView) findViewById(R.id.media);
-        media.setOnClickListener(this);
-        device = (TextView) findViewById(R.id.device);
-        device.setOnClickListener(this);
-        message = (TextView) findViewById(R.id.message);
-        message.setOnClickListener(this);
+        tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         clock = (ImageView) findViewById(R.id.clock);
         clock.setOnClickListener(this);
         weather = (ImageView) findViewById(R.id.weather);
@@ -186,48 +140,14 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         model_add_window = (TextView) findViewById(R.id.model_add_window);
         start_remote_control = (ImageView) findViewById(R.id.start_remote_control);
         start_remote_control.setOnClickListener(this);
+        pause_player = (ImageView) findViewById(R.id.pause_player);
+        pause_player.setOnClickListener(this);
     }
 
-    private void initImageView() {
-        cursor = (ImageView) findViewById(R.id.liaotianline);
-        linearLayout_caidan = (LinearLayout) findViewById(R.id.linearLayout_caidan);
-        //获取图片宽度
-        lineWidth = BitmapFactory.decodeResource(getResources(), R.mipmap.line).getWidth();
-        /*DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
-        //获取屏幕宽度
-         int screenWidth = dm.widthPixels;*/
-        linearLayout_caidan.measure(0, 0);
-        //获取组件的宽度
-        int screenWidth = linearLayout_caidan.getMeasuredWidth();
-        //获取组件的高度
-        int height = linearLayout_caidan.getMeasuredHeight();
-
-        Matrix matrix = new Matrix();
-        offset = (int) ((screenWidth / (float) TAB_COUNT - 100) / 5);
-        matrix.postTranslate(offset, 0);
-        //设置初始位置
-        cursor.setImageMatrix(matrix);
-    }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.model:
-                setSelect(0);
-                break;
-            case R.id.group:
-                setSelect(1);
-                break;
-            case R.id.media:
-                setSelect(2);
-                break;
-            case R.id.device:
-                setSelect(3);
-                break;
-            case R.id.message:
-                setSelect(4);
-                break;
             case R.id.clock:
                 show_clock_dialog();
                 break;
@@ -247,10 +167,49 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                 Intent a = new Intent(this, RemoteControlAct.class);
                 startActivity(a);
                 break;
+            //暂停显示墙播放和开始显示墙播放
+            case R.id.pause_player:
+                if (pausestate == 0) {
+                    pause_player();
+                    ToastUtil.show(MainAct_xiuding.this, "暂停窗体播放");
+                    pausestate = 1;
+                } else {
+                    continue_player();
+                    ToastUtil.show(MainAct_xiuding.this, "继续窗体播放");
+                    pausestate = 0;
+                }
+                break;
             default:
                 break;
         }
     }
+
+    /**
+     * 暂停显示窗
+     */
+    private void pause_player() {
+        webSocket.send("    {\n" +
+                "       \"body\" : {\n" +
+                "          \"pause\" : true\n" +
+                "       },\n" +
+                "       \"guid\" : \"M-103\",\n" +
+                "       \"type\" : \"PAUSEPLAYER\"\n" +
+                "    }");
+    }
+
+    /**
+     * 继续显示窗
+     */
+    private void continue_player() {
+        webSocket.send("    {\n" +
+                "       \"body\" : {\n" +
+                "          \"pause\" : false\n" +
+                "       },\n" +
+                "       \"guid\" : \"M-103\",\n" +
+                "       \"type\" : \"PAUSEPLAYER\"\n" +
+                "    }");
+    }
+
 
     /**
      * 开启窗口
@@ -265,47 +224,6 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                 "       \"guid\" : \"M-90\",\n" +
                 "       \"type\" : \"OPERATEFAVORITEPROGRAM\"\n" +
                 "    }");
-    }
-
-    private void setSelect(int i) {
-        setTab(i);
-        mViewPagerjingdian.setCurrentItem(i);
-    }
-
-    @SuppressLint("NewApi")
-    private void setTab(int i) {
-        resetImgs();
-        // 设置图片为亮色
-        // 切换内容区域
-        switch (i) {
-            case 0:
-                model.setAlpha(0.5f);
-                break;
-            case 1:
-                group.setAlpha(0.5f);
-                break;
-            case 2:
-                media.setAlpha(0.5f);
-                break;
-            case 3:
-                device.setAlpha(0.5f);
-                break;
-            case 4:
-                message.setAlpha(0.5f);
-                break;
-        }
-    }
-
-    /**
-     * 切换图片至暗色
-     */
-    @SuppressLint("NewApi")
-    private void resetImgs() {
-        model.setAlpha(1f);
-        group.setAlpha(1f);
-        media.setAlpha(1f);
-        device.setAlpha(1f);
-        message.setAlpha(1f);
     }
 
     //显示dialog，是否添加闹钟
@@ -411,21 +329,35 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
 
     @Override
     public void onRcvMessage(final String text) {
-        LogUtil.d("hehe", text);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
+
                     JSONObject allmodelobject = new JSONObject(text);
-                    if (allmodelobject.getString("type").equals("ADDWIDGET") && allmodelobject.getString("guid").equals("M-117")) {
-                        String bodystring = allmodelobject.getString("body");
-                        JSONObject basicInfoboj = new JSONObject(bodystring);
+                    /**
+                     * 如果监听到了显示窗回显的字段
+                     * 接口地址如下http://www.showdoc.cc/2452?page_id=13041     MAXWALLSNAPSHOT
+                     */
+                    if (allmodelobject.getString("type").equals("MAXWALLSNAPSHOT")) {
+
+
+                    } else if (allmodelobject.getString("type").equals("ADDWIDGET") && allmodelobject.getString("guid").equals("M-117")) {
+
                         ToastUtil.show(MainAct_xiuding.this, "时钟添加成功");
+
                     } else if (allmodelobject.getString("type").equals("ADDWIDGET") && allmodelobject.getString("guid").equals("M-31")) {
+
                         ToastUtil.show(MainAct_xiuding.this, "天气添加成功");
-                    }//增加模式到播放列表
+
+                    }
+                    //增加模式到播放列表
                     else if (allmodelobject.getString("type").equals("OPERATEFAVORITEPROGRAM")) {
 
+                    }
+                    //加载显示墙信息  LoadVideoWallInfo
+                    else if (allmodelobject.getString("type").equals("LOADVIDEOWALLINFO")) {
+                        LogUtil.d("!!!!!!!!!!!!!!LOADVIDEOWALLINFOLOADVIDEOWALLINFO", text);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -476,13 +408,16 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         if (LOCKSTATE == 1) {
             if (modeljudge_state == 0) {
                 start_window();
-                model_add_window.setText("模 式:" + modelbean.getName());
-                modeljudge_state = 1;
+
+                //调用加载模式的接口LoadProgram，接口地址：https://www.showdoc.cc/2452?page_id=11152
+                showNormalDialog(modelbean.getID(), modelbean.getName());
+
             } else {
                 Snackbar.make(v, "显示窗已有模式确认要替换吗?", Snackbar.LENGTH_LONG)
                         .setAction("确认", new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                //替换之前的模式
                             }
                         }).show();
             }
@@ -491,5 +426,66 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                     .show();
         }
 
+    }
+
+
+    private void showNormalDialog(final int modelId, final String modelname) {
+        /* @setIcon 设置对话框图标
+         * @setTitle 设置对话框标题
+         * @setMessage 设置对话框消息提示
+         * setXXX方法返回Dialog对象，因此可以链式设置属性
+         */
+        final AlertDialog.Builder normalDialog =
+                new AlertDialog.Builder(MainAct_xiuding.this);
+        normalDialog.setIcon(R.mipmap.applog);
+        normalDialog.setTitle("播放模式");
+        normalDialog.setMessage("是否播放" + modelname + "?");
+        normalDialog.setPositiveButton("确定",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //...To-do
+                        model_add_window.setText("模 式:" + modelname);
+                        webSocket.send("{\n" +
+                                "   \"body\" : {\n" +
+                                "      \"id\" :" + modelId + "   },\n" +
+                                "   \"guid\" : \"M-79\",\n" +
+                                "   \"type\" : \"PLAYPROGRAM\"\n" +
+                                "}");
+                        modeljudge_state = 1;
+                    }
+                });
+        normalDialog.setNegativeButton("关闭",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //...To-do
+                    }
+                });
+        // 显示
+        normalDialog.show();
+    }
+
+
+    @OnClick({R.id.lastmodel, R.id.nextmodel})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.lastmodel:
+                ToastUtil.show(MainAct_xiuding.this, "播放上一个模式");
+                webSocket.send("    {\n" +
+                        "       \"body\" : \"\",\n" +
+                        "       \"guid\" : \"M-172\",\n" +
+                        "       \"type\" : \"PREVIOUSPROGRAM\"\n" +
+                        "    }");
+                break;
+            case R.id.nextmodel:
+                ToastUtil.show(MainAct_xiuding.this, "播放下一个模式");
+                webSocket.send("    {\n" +
+                        "       \"body\" : \"\",\n" +
+                        "       \"guid\" : \"M-171\",\n" +
+                        "       \"type\" : \"NEXTPROGRAM\"\n" +
+                        "    }");
+                break;
+        }
     }
 }

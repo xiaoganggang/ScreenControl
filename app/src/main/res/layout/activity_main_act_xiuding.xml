@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
@@ -24,9 +25,9 @@
             android:id="@+id/jiekouhuidiao"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"
             android:text="接口回调好使不"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
 
         <com.xiaopo.flying.sticker.StickerView
             android:id="@+id/sticker_view"
@@ -120,17 +121,20 @@
                 android:orientation="horizontal">
 
                 <ImageView
+                    android:id="@+id/lastmodel"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:background="@mipmap/last" />
 
                 <ImageView
+                    android:id="@+id/pause_player"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_marginLeft="10dp"
                     android:background="@mipmap/pause1" />
 
                 <ImageView
+                    android:id="@+id/nextmodel"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_marginLeft="10dp"
@@ -180,7 +184,16 @@
             android:layout_width="match_parent"
             android:layout_height="60dp">
 
-            <LinearLayout
+            <android.support.design.widget.TabLayout
+                android:id="@+id/tab_layout"
+                app:tabGravity="fill"
+                android:layout_width="405dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="14dp"
+                app:tabMode="fixed">
+            </android.support.design.widget.TabLayout>
+
+         <!--   <LinearLayout
                 android:id="@+id/linearLayout_caidan"
                 android:layout_width="405dp"
                 android:layout_height="60dp"
@@ -191,8 +204,7 @@
                 <TextView
                     android:id="@+id/model"
                     android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="1.0"
+                    android:layout_height="match_parent"
                     android:gravity="center"
                     android:padding="6dp"
                     android:text="模式"
@@ -238,8 +250,7 @@
                     android:text="消息"
                     android:textSize="18dp" />
 
-            </LinearLayout>
-
+            </LinearLayout>-->
             <LinearLayout
                 android:layout_width="380dp"
                 android:layout_height="match_parent"

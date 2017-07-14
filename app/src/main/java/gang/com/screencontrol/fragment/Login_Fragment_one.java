@@ -109,8 +109,8 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                     MainService.setCallBackListener(this);
                     webSocket.send("    {\n" +
                             "       \"body\" : {\n" +
-                            "          \"userName\" : \"Admin\",\n" +
-                            "          \"userPassword\" : \"admin\"\n" +
+                            "          \"userName\" : \"11111\",\n" +
+                            "          \"userPassword\" : \"11111\"\n" +
                             "       },\n" +
                             "       \"guid\" : \"M-0\",\n" +
                             "       \"type\" : \"QUERYUSERLOGIN\"\n" +
@@ -152,6 +152,12 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
         mTimer.schedule(timerTask, 0, 30000);
     }*/
 
+    /**
+     * https://www.showdoc.cc/2452?page_id=11985
+     * 登录接口的使用
+     *
+     * @param text
+     */
     @Override
     public void onRcvMessage(final String text) {
         getActivity().runOnUiThread(new Runnable() {
@@ -160,10 +166,15 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                 LogUtil.d("哈哈哈", text);
                 try {
                     JSONObject loginobject = new JSONObject(text);
-                    if (loginobject.getString("type").equals("QUERYUSERLOGIN")) {
+                    String bodystring = loginobject.getString("body");
+                    JSONObject bodyobject = new JSONObject(bodystring);
+                    bodyobject.getBoolean("loginSuccess");
+                    if (loginobject.getString("type").equals("QUERYUSERLOGIN") && bodyobject.getBoolean("loginSuccess") == true) {
                         StartActivity(MainAct_xiuding.class);
+                    } else if (loginobject.getString("type").equals("QUERYUSERLOGIN") && bodyobject.getInt("loginType") == 3) {
+                        ToastUtil.show(getActivity(), "请输入正确的账号和密码");
                     } else {
-                        //ToastUtil.show(getActivity(), "请输入正确的账号和密码");
+                        ToastUtil.show(getActivity(), "请输入正确的用户名和密码");
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();

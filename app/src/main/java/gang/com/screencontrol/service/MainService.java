@@ -27,6 +27,7 @@ import javax.net.ssl.X509TrustManager;
 
 import gang.com.screencontrol.MainActivity;
 import gang.com.screencontrol.R;
+import gang.com.screencontrol.util.LogUtil;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -161,7 +162,7 @@ public class MainService extends Service {
                 .build();
 
         //Request request = new Request.Builder().url("wss://" + adress + ":" + port).build();
-        Request request = new Request.Builder().url("wss://192.168.10.168:7681").build();
+        Request request = new Request.Builder().url("wss://192.168.10.219:7681").build();
         //建立连接
         mOkHttpClient.newWebSocket(request, new WebSocketListener() {
             @Override
@@ -182,7 +183,6 @@ public class MainService extends Service {
                 if (null != messageLister) {
                     messageLister.onRcvMessage(text);
                 }
-
             }
 
             @Override
