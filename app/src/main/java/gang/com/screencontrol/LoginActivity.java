@@ -40,6 +40,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_main);
+        AppManager.addActivity(this);
         //绑定视图一定要在填充视图后绑定
         mUnbider = ButterKnife.bind(this);
         AppManager.addActivity(this);
@@ -79,6 +80,4 @@ public class LoginActivity extends AppCompatActivity {
         mUnbider.unbind();
         super.onDestroy();
     }
-
-
 }

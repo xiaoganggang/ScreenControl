@@ -13,6 +13,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -37,6 +38,7 @@ import gang.com.screencontrol.bean.MobelBean;
 import gang.com.screencontrol.fragment.Media_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment;
 import gang.com.screencontrol.service.MainService;
+import gang.com.screencontrol.util.AppManager;
 import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.WebSocket;
@@ -49,6 +51,8 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     ImageView lastmodel;
     @BindView(R.id.nextmodel)
     ImageView nextmodel;
+    @BindView(R.id.close_software)
+    ImageView closeSoftware;
     /**
      * 选项卡标题
      */
@@ -78,6 +82,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_act_xiuding);
         ButterKnife.bind(this);
+        AppManager.addActivity(this);
         jiekouhuidiao = (TextView) findViewById(R.id.jiekouhuidiao);
         mViewPagerjingdian = (ViewPager) findViewById(R.id.jingdianviewpager);
         stickerView = (StickerView) findViewById(R.id.sticker_view);
@@ -403,12 +408,11 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
      * @param mobel_list
      */
     @Override
-    public void OnAddModelView(View v, MobelBean.BasicInfoBean modelbean, List<MobelBean.BasicInfoBean> mobel_list) {
+    public void OnAddModelView(View v, final MobelBean.BasicInfoBean modelbean, List<MobelBean.BasicInfoBean> mobel_list) {
         //显示窗中没有模式,且是开锁状态
         if (LOCKSTATE == 1) {
             if (modeljudge_state == 0) {
                 start_window();
-
                 //调用加载模式的接口LoadProgram，接口地址：https://www.showdoc.cc/2452?page_id=11152
                 showNormalDialog(modelbean.getID(), modelbean.getName());
 
@@ -417,7 +421,18 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                         .setAction("确认", new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                //替换时点击的模式内容的id和模式内容的名称
+                                modelbean.getName();
+                                modelbean.getID();
                                 //替换之前的模式
+                                model_add_window.setText("模 式:" + modelbean.getName());
+                                webSocket.send("{\n" +
+                                        "   \"body\" : {\n" +
+                                        "      \"id\" :" + modelbean.getID() + "   },\n" +
+                                        "   \"guid\" : \"M-79\",\n" +
+                                        "   \"type\" : \"PLAYPROGRAM\"\n" +
+                                        "}");
+                                modeljudge_state = 1;
                             }
                         }).show();
             }
@@ -467,7 +482,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     }
 
 
-    @OnClick({R.id.lastmodel, R.id.nextmodel})
+    @OnClick({R.id.lastmodel, R.id.nextmodel,R.id.close_software})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.lastmodel:
@@ -486,6 +501,23 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                         "       \"type\" : \"NEXTPROGRAM\"\n" +
                         "    }");
                 break;
+            case R.id.close_software:
+                //关闭软件，关闭所有Activity
+              AppManager.finishAllActivity();
+                break;
         }
     }
+
+    /**
+     * 监听返回键
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            AppManager.finishActivity(MainAct_xiuding.this);
+        }
+        return false;
+    }
+
+
 }

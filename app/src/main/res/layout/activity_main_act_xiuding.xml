@@ -159,6 +159,7 @@
                     android:orientation="horizontal">
 
                     <ImageView
+                        android:id="@+id/close_software"
                         android:layout_width="38dp"
                         android:layout_height="38dp"
                         android:background="@mipmap/close" />
