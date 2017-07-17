@@ -3,6 +3,8 @@ package gang.com.screencontrol;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -13,17 +15,21 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.xiaopo.flying.sticker.DrawableSticker;
 import com.xiaopo.flying.sticker.StickerView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,6 +39,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import gang.com.screencontrol.adapter.ViewPagerAdapter;
+import gang.com.screencontrol.bean.LoadVideoWallInfo_Bean;
 import gang.com.screencontrol.bean.MediaBean_childdetial;
 import gang.com.screencontrol.bean.MobelBean;
 import gang.com.screencontrol.fragment.Media_Fragment;
@@ -45,6 +52,7 @@ import okhttp3.WebSocket;
 
 /**
  * BUG请求后返回来的内容总是被那些fragment的onMessage拦截掉
+ * 图片的Base64编解码  http://blog.csdn.net/lincyang/article/details/46596899
  */
 public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener, MainService.MessageCallBackListener, Media_Fragment.MediaAddCallBackListener, Model_Fragment.ModelAddCallBackListener {
     @BindView(R.id.lastmodel)
@@ -53,6 +61,10 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     ImageView nextmodel;
     @BindView(R.id.close_software)
     ImageView closeSoftware;
+    @BindView(R.id.huixianceshi)
+    ImageView huixianceshi;
+
+
     /**
      * 选项卡标题
      */
@@ -76,6 +88,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     //暂停点击状态pausestate
     private int pausestate = 0;//暂停是0
     private TabLayout tabLayout;
+    private PagerAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +102,12 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         stickerView.setBackgroundColor(Color.WHITE);
         stickerView.setLocked(false);
         stickerView.setConstrained(true);
+        int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        stickerView.measure(w, h);
+        int height = stickerView.getMeasuredHeight();
+        int width = stickerView.getMeasuredWidth();
+        System.out.println("measure width=" + width + " height=" + height);
         initWebsocket();
         //加载显示墙信息指令发送
         loadWallInfo();
@@ -109,14 +128,14 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
 
 
     private void initViewpage() {
-        PagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        mViewPagerjingdian.setAdapter(adapter);
+        mAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+        mViewPagerjingdian.setAdapter(mAdapter);
         tabLayout.setupWithViewPager(mViewPagerjingdian);
         //3个page，所以第一个page启动的时候，右侧的page会加载，中间第二个page选中的时候，不会做任何事情，因为左右两侧现在各有一个，第三个page选中的时候，销毁第一个page的视图，
         //因为现在page3左侧有2个page了，必须销毁远的那个
         //意思就是说设置当前page左右两侧应该被保持的page数量，超过这个限制，page会被销毁重建（只是销毁视图），onDestroy-onCreateView,但不会执行onDestroy
         //尽量维持这个值小，特别是有复杂布局的时候，因为如果这个值很大，就会占用很多内存，如果只有3-4page的话，可以全部保持active，可以保持page切换的顺滑
-        mViewPagerjingdian.setOffscreenPageLimit(2);
+        mViewPagerjingdian.setOffscreenPageLimit(4);
         //预加载问题如何取消
     }
 
@@ -127,7 +146,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
         //接口回调，调用发送websocket接口
         webSocket = MainService.getWebSocket();
         if (null != webSocket) {
-            MainService.setCallBackListener(MainAct_xiuding.this);
+            MainService.addListener(MainAct_xiuding.this);
         } else {
             ToastUtil.show(MainAct_xiuding.this, "websocket连接错误");
         }
@@ -345,30 +364,92 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                      * 接口地址如下http://www.showdoc.cc/2452?page_id=13041     MAXWALLSNAPSHOT
                      */
                     if (allmodelobject.getString("type").equals("MAXWALLSNAPSHOT")) {
-
-
+                       ToastUtil.show(MainAct_xiuding.this,"有回显啊");
+                        //huixianceshi.setImageResource(R.mipmap.xianshiqiang);
+                        LogUtil.d("!!!!!!!!!!!!!!MAXWALLSNAPSHOT", text);
+                        String bodystring = allmodelobject.getString("body");
+                        JSONObject basicInfoboj = new JSONObject(bodystring);
+                        //获取base64编码的数据
+                        basicInfoboj.getString("imageDataStr");
+                        LogUtil.d("图像字符内容", basicInfoboj.getString("imageDataStr").toString());
+                        //将图片字符串数据通过base64的decode解码
+                        byte[] decode = Base64.decode(basicInfoboj.getString("imageDataStr").toString(), Base64.DEFAULT);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(decode, 0, decode.length);
+                        //save to image on sdcard
+                        saveBitmap(bitmap);
                     } else if (allmodelobject.getString("type").equals("ADDWIDGET") && allmodelobject.getString("guid").equals("M-117")) {
 
                         ToastUtil.show(MainAct_xiuding.this, "时钟添加成功");
 
                     } else if (allmodelobject.getString("type").equals("ADDWIDGET") && allmodelobject.getString("guid").equals("M-31")) {
-
                         ToastUtil.show(MainAct_xiuding.this, "天气添加成功");
-
                     }
                     //增加模式到播放列表
                     else if (allmodelobject.getString("type").equals("OPERATEFAVORITEPROGRAM")) {
 
                     }
-                    //加载显示墙信息  LoadVideoWallInfo
+                    //加载显示墙配置信息  LoadVideoWallInfo，也就是显示几个屏幕几个显示器
                     else if (allmodelobject.getString("type").equals("LOADVIDEOWALLINFO")) {
                         LogUtil.d("!!!!!!!!!!!!!!LOADVIDEOWALLINFOLOADVIDEOWALLINFO", text);
+                        String bodystring = allmodelobject.getString("body");
+                        JSONObject basicInfoboj = new JSONObject(bodystring);
+                        //basicInfoboj.getString("slaveInfo");
+                        JSONArray slaveInfoJsonArray = basicInfoboj.getJSONArray("slaveInfo");
+                        JSONObject slaveInfoJsonObject = slaveInfoJsonArray.getJSONObject(0);
+                        JSONArray monitorInfoJsonArray = slaveInfoJsonObject.getJSONArray("monitorInfo");
+                        LogUtil.d("!!!!!!!!!!!!!!xiaopingmu", monitorInfoJsonArray.toString());
+                        //将Array数据转换成List
+                        List<LoadVideoWallInfo_Bean.BodyBean.SlaveInfoBean.MonitorInfoBean> MonitorInfolist = gson.fromJson(basicInfoboj.getString("basicInfo"), new TypeToken<List<LoadVideoWallInfo_Bean.BodyBean.SlaveInfoBean.MonitorInfoBean>>() {
+                        }.getType());
+                        if (MonitorInfolist.size() == 0) {
+                            //墙配置信息为0，显示墙显示内容为空
+
+                        } else if (MonitorInfolist.size() == 1) {
+                            //一个墙配置，也就是显示一个显示器
+                            ViewGroup group = (ViewGroup) findViewById(R.id.sticker_view); //获取原来的布局容器
+                            ImageView imageView = new ImageView(MainAct_xiuding.this);  //创建imageview
+                            imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));  //image的布局方式
+                            imageView.setImageResource(R.mipmap.xianshiqiang);  //设置imageview呈现的图片
+                            group.addView(imageView);  //添加到布局容器中，显示图片。
+                        } else if (MonitorInfolist.size() > 1) {
+                            //一个墙配置，也就是显示一个显示器
+                            ViewGroup group = (ViewGroup) findViewById(R.id.sticker_view); //获取原来的布局容器
+                            ImageView imageView = new ImageView(MainAct_xiuding.this);  //创建imageview
+                            imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));  //image的布局方式
+                            imageView.setImageResource(R.mipmap.xianshiqiang);  //设置imageview呈现的图片
+                            group.addView(imageView);  //添加到布局容器中，显示图片。
+                        }
+                       /* for (int i = 0; i <= MonitorInfolist.size(); i++) {
+                            MonitorInfolist.get(i).getWidth();
+                        }*/
                     }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
+    }
+
+    /**
+     * 将解码的图片保存到SD卡
+     *
+     * @param bitmap
+     */
+    private void saveBitmap(Bitmap bitmap) {
+        huixianceshi.setImageBitmap(bitmap);
+        /*try {
+            String path = Environment.getExternalStorageDirectory().getPath()
+                    +"/decodeImage.jpg";
+            Log.d("linc","path is "+path);
+            OutputStream stream = new FileOutputStream(path);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
+            stream.close();
+            Log.e("linc","jpg okay!");
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("linc","failed: "+e.getMessage());
+        }*/
     }
 
     @Override
@@ -482,7 +563,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     }
 
 
-    @OnClick({R.id.lastmodel, R.id.nextmodel,R.id.close_software})
+    @OnClick({R.id.lastmodel, R.id.nextmodel, R.id.close_software})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.lastmodel:
@@ -503,7 +584,7 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.close_software:
                 //关闭软件，关闭所有Activity
-              AppManager.finishAllActivity();
+                AppManager.finishAllActivity();
                 break;
         }
     }
@@ -520,4 +601,9 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
     }
 
 
+    @Override
+    protected void onDestroy() {
+        MainService.removeListener(this);
+        super.onDestroy();
+    }
 }

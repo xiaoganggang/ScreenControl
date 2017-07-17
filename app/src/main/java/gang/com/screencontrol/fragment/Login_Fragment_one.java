@@ -106,7 +106,7 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                 getActivity().startService(i);*/
                 WebSocket webSocket = MainService.getWebSocket();
                 if (null != webSocket) {
-                    MainService.setCallBackListener(this);
+                    MainService.addListener(this);
                     webSocket.send("    {\n" +
                             "       \"body\" : {\n" +
                             "          \"userName\" : \"11111\",\n" +

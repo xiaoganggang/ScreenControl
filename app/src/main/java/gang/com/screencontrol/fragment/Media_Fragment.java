@@ -81,7 +81,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
         //接口回调，调用发送websocket接口
          webSocket = MainService.getWebSocket();
         if (null != webSocket) {
-            MainService.setCallBackListener(this);
+            MainService.addListener(this);
             webSocket.send("    {\n" +
                     "       \"body\" : {\n" +
                     "          \"parentID\" : 0\n" +
@@ -199,4 +199,11 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
     public interface MediaAddCallBackListener {
         void OnAddMediaView(MediaBean_childdetial mediaBean_childdetial);
     }
+
+    @Override
+    public void onDestroyView() {
+        MainService.removeListener(this);
+        super.onDestroyView();
+    }
+
 }

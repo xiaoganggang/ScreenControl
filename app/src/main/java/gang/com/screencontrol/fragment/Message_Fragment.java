@@ -70,7 +70,7 @@ public class Message_Fragment extends BaseFragment implements MainService.Messag
         //接口回调，调用发送websocket接口
         WebSocket webSocket = MainService.getWebSocket();
         if (null != webSocket) {
-            MainService.setCallBackListener(this);
+            MainService.addListener(this);
             webSocket.send("    {\n" +
                     "       \"body\" : {\n" +
                     "          \"keyWords\" : \""+"1"+"\"\n" +
@@ -128,5 +128,11 @@ public class Message_Fragment extends BaseFragment implements MainService.Messag
             return;
         }
         getData();
+    }
+
+    @Override
+    public void onDestroyView() {
+        MainService.removeListener(this);
+        super.onDestroyView();
     }
 }

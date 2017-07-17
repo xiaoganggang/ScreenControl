@@ -88,7 +88,7 @@ public class Model_Fragment extends BaseFragment implements MainService.MessageC
         //接口回调，调用发送websocket接口
          webSocket = MainService.getWebSocket();
         if (null != webSocket) {
-            MainService.setCallBackListener(this);
+            MainService.addListener(this);
             webSocket.send("{\n" +
                     "       \"body\" : \"\",\n" +
                     "       \"guid\" : \"M-18\",\n" +
@@ -194,9 +194,7 @@ public class Model_Fragment extends BaseFragment implements MainService.MessageC
         });
         dialog_model.show();
     }
-    /**
-     * 模式将点击事件回传到Activity
-     */
+
 
     /**
      * 用于注册回调事件
@@ -221,5 +219,11 @@ public class Model_Fragment extends BaseFragment implements MainService.MessageC
      */
     public interface ModelAddCallBackListener {
         void OnAddModelView(View v, MobelBean.BasicInfoBean modelbean, List<MobelBean.BasicInfoBean> mobel_list);
+    }
+
+    @Override
+    public void onDestroyView() {
+        MainService.removeListener(this);
+        super.onDestroyView();
     }
 }

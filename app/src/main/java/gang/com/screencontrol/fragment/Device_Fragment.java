@@ -69,7 +69,7 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
         //接口回调，调用发送websocket接口
          webSocket = MainService.getWebSocket();
         if (null != webSocket) {
-            MainService.setCallBackListener(this);
+            MainService.addListener(this);
             webSocket.send("    {\n" +
                     "       \"body\" : {\n" +
                     "          \"typeid\" : [ 0 ]\n" +
@@ -131,4 +131,12 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
         }
         getData();
     }
+
+    @Override
+    public void onDestroyView() {
+        MainService.removeListener(this);
+        super.onDestroyView();
+    }
+
+
 }

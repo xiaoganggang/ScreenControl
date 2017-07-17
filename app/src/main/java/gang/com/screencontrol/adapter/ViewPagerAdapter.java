@@ -14,6 +14,9 @@ import gang.com.screencontrol.fragment.Grouping_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment;
 import gang.com.screencontrol.fragment.Message_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment;
+import gang.com.screencontrol.util.LogUtil;
+
+import static java.lang.Class.forName;
 
 
 /**

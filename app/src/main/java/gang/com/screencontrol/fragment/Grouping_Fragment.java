@@ -34,7 +34,6 @@ import okhttp3.WebSocket;
 /**
  * Created by xiaogangzai on 2017/5/31.
  */
-
 public class Grouping_Fragment extends BaseFragment implements MainService.MessageCallBackListener {
     public static Grouping_Fragment instance = null;
     private RecyclerView recyler_group;
@@ -78,7 +77,7 @@ public class Grouping_Fragment extends BaseFragment implements MainService.Messa
         //接口回调，调用发送websocket接口
         WebSocket webSocket = MainService.getWebSocket();
         if (null != webSocket) {
-            MainService.setCallBackListener(this);
+            MainService.addListener(this);
             webSocket.send("{\n" +
                     "      \"body\" : \"\",\n" +
                     "       \"guid\" : \"M-17\",\n" +
@@ -143,5 +142,10 @@ public class Grouping_Fragment extends BaseFragment implements MainService.Messa
             return;
         }
         getData();
+    }
+    @Override
+    public void onDestroyView() {
+        MainService.removeListener(this);
+        super.onDestroyView();
     }
 }

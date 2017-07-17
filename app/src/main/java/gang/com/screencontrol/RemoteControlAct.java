@@ -46,7 +46,7 @@ public class RemoteControlAct extends BaseActivity implements MainService.Messag
         //接口回调，调用发送websocket接口
         webSocket = MainService.getWebSocket();
         if (null != webSocket) {
-            MainService.setCallBackListener(RemoteControlAct.this);
+            MainService.addListener(RemoteControlAct.this);
         } else {
             ToastUtil.show(RemoteControlAct.this, "websocket连接错误");
         }
@@ -117,5 +117,11 @@ public class RemoteControlAct extends BaseActivity implements MainService.Messag
 
         return false;
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        MainService.removeListener(this);
     }
 }

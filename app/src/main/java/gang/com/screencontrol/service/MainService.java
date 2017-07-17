@@ -15,6 +15,9 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +49,9 @@ public class MainService extends Service {
     //长连接的建立
     static OkHttpClient mOkHttpClient;
     public static WebSocket mWebSocket;
-    private static MessageCallBackListener messageLister;
+    static List<MessageCallBackListener>  mListenerList = new ArrayList<>();
+
+    //private static MessageCallBackListener messageLister;
     private static String adress;
     private static String port;
 
@@ -180,9 +185,10 @@ public class MainService extends Service {
             public void onMessage(WebSocket webSocket, String text) {
                 System.out.println("client onMessage");
                 System.out.println("message:" + text);
-                if (null != messageLister) {
+                callBack(text);
+                /*if (null != messageLister) {
                     messageLister.onRcvMessage(text);
-                }
+                }*/
             }
 
             @Override
@@ -205,6 +211,16 @@ public class MainService extends Service {
                 System.out.println("response:" + response);
             }
         });
+    }
+
+    private static void callBack(String text) {
+        Iterator<MessageCallBackListener> iterator = mListenerList.iterator();
+        while(iterator.hasNext()){
+            MessageCallBackListener listener = iterator.next();
+            if (null != listener) {
+                listener.onRcvMessage(text);
+            }
+        }
     }
 
     //每秒发送一条消息
@@ -233,8 +249,18 @@ public class MainService extends Service {
         return mWebSocket;
     }
 
-    public static void setCallBackListener(MessageCallBackListener listener) {
+   /* public static void setCallBackListener(MessageCallBackListener listener) {
         messageLister = listener;
+    }*/
+
+    public static void addListener(MessageCallBackListener listener){
+        mListenerList.add(listener);
+    }
+
+    public static void removeListener(MessageCallBackListener listener){
+        if(mListenerList.contains(listener)){
+            mListenerList.remove(listener);
+        }
     }
 
     public interface MessageCallBackListener {

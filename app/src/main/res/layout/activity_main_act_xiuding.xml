@@ -9,6 +9,12 @@
     android:orientation="vertical"
     tools:context="gang.com.screencontrol.MainActivity">
 
+    <ImageView
+        android:id="@+id/huixianceshi"
+        android:layout_width="match_parent"
+        android:background="@mipmap/xianshiqiang"
+        android:layout_height="100dp" />
+
     <LinearLayout
         android:id="@+id/contain_view"
         android:layout_width="match_parent"
@@ -36,6 +42,7 @@
             android:layout_gravity="center">
             <!-- custom, maybe you will like to put an ImageView-->
             <ImageView
+
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
@@ -187,71 +194,70 @@
 
             <android.support.design.widget.TabLayout
                 android:id="@+id/tab_layout"
+                android:layout_width="405dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="14dp"
                 app:tabGravity="fill"
-                android:layout_width="405dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="14dp"
-                app:tabMode="fixed">
-            </android.support.design.widget.TabLayout>
+                app:tabMode="fixed"></android.support.design.widget.TabLayout>
 
-         <!--   <LinearLayout
-                android:id="@+id/linearLayout_caidan"
-                android:layout_width="405dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="14dp"
-                android:background="#FFFFFF"
-                android:orientation="horizontal">
+            <!--   <LinearLayout
+                   android:id="@+id/linearLayout_caidan"
+                   android:layout_width="405dp"
+                   android:layout_height="60dp"
+                   android:layout_marginTop="14dp"
+                   android:background="#FFFFFF"
+                   android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/model"
-                    android:layout_width="fill_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:padding="6dp"
-                    android:text="模式"
-                    android:textSize="18dp" />
+                   <TextView
+                       android:id="@+id/model"
+                       android:layout_width="fill_parent"
+                       android:layout_height="match_parent"
+                       android:gravity="center"
+                       android:padding="6dp"
+                       android:text="模式"
+                       android:textSize="18dp" />
 
-                <TextView
-                    android:id="@+id/group"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="1.0"
-                    android:gravity="center"
-                    android:padding="6dp"
-                    android:text="分组"
-                    android:textSize="18dp" />
+                   <TextView
+                       android:id="@+id/group"
+                       android:layout_width="fill_parent"
+                       android:layout_height="fill_parent"
+                       android:layout_weight="1.0"
+                       android:gravity="center"
+                       android:padding="6dp"
+                       android:text="分组"
+                       android:textSize="18dp" />
 
-                <TextView
-                    android:id="@+id/media"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="1.0"
-                    android:gravity="center"
-                    android:padding="6dp"
-                    android:text="媒体"
-                    android:textSize="18dp" />
+                   <TextView
+                       android:id="@+id/media"
+                       android:layout_width="fill_parent"
+                       android:layout_height="fill_parent"
+                       android:layout_weight="1.0"
+                       android:gravity="center"
+                       android:padding="6dp"
+                       android:text="媒体"
+                       android:textSize="18dp" />
 
-                <TextView
-                    android:id="@+id/device"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="1.0"
-                    android:gravity="center"
-                    android:padding="6dp"
-                    android:text="设备"
-                    android:textSize="18dp" />
+                   <TextView
+                       android:id="@+id/device"
+                       android:layout_width="fill_parent"
+                       android:layout_height="fill_parent"
+                       android:layout_weight="1.0"
+                       android:gravity="center"
+                       android:padding="6dp"
+                       android:text="设备"
+                       android:textSize="18dp" />
 
-                <TextView
-                    android:id="@+id/message"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="1.0"
-                    android:gravity="center"
-                    android:padding="6dp"
-                    android:text="消息"
-                    android:textSize="18dp" />
+                   <TextView
+                       android:id="@+id/message"
+                       android:layout_width="fill_parent"
+                       android:layout_height="fill_parent"
+                       android:layout_weight="1.0"
+                       android:gravity="center"
+                       android:padding="6dp"
+                       android:text="消息"
+                       android:textSize="18dp" />
 
-            </LinearLayout>-->
+               </LinearLayout>-->
             <LinearLayout
                 android:layout_width="380dp"
                 android:layout_height="match_parent"
