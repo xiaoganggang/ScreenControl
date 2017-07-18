@@ -12,7 +12,6 @@
     <ImageView
         android:id="@+id/huixianceshi"
         android:layout_width="match_parent"
-        android:background="@mipmap/xianshiqiang"
         android:layout_height="100dp" />
 
     <LinearLayout

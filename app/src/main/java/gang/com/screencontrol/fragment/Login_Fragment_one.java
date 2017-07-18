@@ -172,7 +172,7 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                     if (loginobject.getString("type").equals("QUERYUSERLOGIN") && bodyobject.getBoolean("loginSuccess") == true) {
                         StartActivity(MainAct_xiuding.class);
                     } else if (loginobject.getString("type").equals("QUERYUSERLOGIN") && bodyobject.getInt("loginType") == 3) {
-                        ToastUtil.show(getActivity(), "请输入正确的账号和密码");
+                        ToastUtil.show(getActivity(), "用户已在其他设备登录");
                     } else {
                         ToastUtil.show(getActivity(), "请输入正确的用户名和密码");
                     }

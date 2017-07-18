@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -33,6 +36,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 import java.util.List;
 
 import butterknife.BindView;
@@ -46,6 +56,7 @@ import gang.com.screencontrol.fragment.Media_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.AppManager;
+import gang.com.screencontrol.util.ImgHelper;
 import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.WebSocket;
@@ -53,6 +64,7 @@ import okhttp3.WebSocket;
 /**
  * BUG请求后返回来的内容总是被那些fragment的onMessage拦截掉
  * 图片的Base64编解码  http://blog.csdn.net/lincyang/article/details/46596899
+ * Base64解码问题  http://blog.sina.com.cn/s/blog_54410d940101esw5.html
  */
 public class MainAct_xiuding extends AppCompatActivity implements View.OnClickListener, MainService.MessageCallBackListener, Media_Fragment.MediaAddCallBackListener, Model_Fragment.ModelAddCallBackListener {
     @BindView(R.id.lastmodel)
@@ -364,19 +376,43 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                      * 接口地址如下http://www.showdoc.cc/2452?page_id=13041     MAXWALLSNAPSHOT
                      */
                     if (allmodelobject.getString("type").equals("MAXWALLSNAPSHOT")) {
-                       ToastUtil.show(MainAct_xiuding.this,"有回显啊");
+
                         //huixianceshi.setImageResource(R.mipmap.xianshiqiang);
                         LogUtil.d("!!!!!!!!!!!!!!MAXWALLSNAPSHOT", text);
                         String bodystring = allmodelobject.getString("body");
                         JSONObject basicInfoboj = new JSONObject(bodystring);
                         //获取base64编码的数据
                         basicInfoboj.getString("imageDataStr");
-                        LogUtil.d("图像字符内容", basicInfoboj.getString("imageDataStr").toString());
+                        basicInfoboj.getString("height");
+                        basicInfoboj.getString("width");
+                        LogUtil.d("图像字  符内容", basicInfoboj.getString("imageDataStr").toString());
                         //将图片字符串数据通过base64的decode解码
                         byte[] decode = Base64.decode(basicInfoboj.getString("imageDataStr").toString(), Base64.DEFAULT);
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(decode, 0, decode.length);
-                        //save to image on sdcard
-                        saveBitmap(bitmap);
+
+                        //Bitmap bitmap = BitmapFactory.decodeByteArray(decode, 0, decode.length);
+                        YuvImage yuvimage=new YuvImage(decode, ImageFormat.NV21, Integer.valueOf(basicInfoboj.getString("width").toString()),Integer.valueOf(basicInfoboj.getString("height").toString()), null);//20、20分别是图的宽度与高度
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        yuvimage.compressToJpeg(new Rect(0, 0,20, 20), 100, baos);//80--JPG图片的质量[0-100],100最高
+                        byte[] jdata = baos.toByteArray();
+                        Bitmap bmp = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
+                        String bitmapString = ImgHelper.bitmaptoString(bmp) ;
+
+                        huixianceshi.setImageBitmap( bmp ) ;
+                        ToastUtil.show(MainAct_xiuding.this,"有回显啊");
+                      /*  BitmapFactory.Options options=new BitmapFactory.Options();
+                        options.inSampleSize = 8;
+                        InputStream input = new ByteArrayInputStream(decode);
+                        SoftReference softRef = new SoftReference(BitmapFactory.decodeStream(input, null, options));
+                        Bitmap bitmap = (Bitmap)softRef.get();
+                        //得到bitmap流字符串
+                        String bitmapString = ImgHelper.bitmaptoString(bitmap) ;
+                        try {
+                            Bitmap bitmapoo = ImgHelper.bytes2Bimap( ImgHelper.decode( bitmapString )) ;
+                            huixianceshi.setImageBitmap( bitmapoo ) ;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }*/
+
                     } else if (allmodelobject.getString("type").equals("ADDWIDGET") && allmodelobject.getString("guid").equals("M-117")) {
 
                         ToastUtil.show(MainAct_xiuding.this, "时钟添加成功");
@@ -429,27 +465,6 @@ public class MainAct_xiuding extends AppCompatActivity implements View.OnClickLi
                 }
             }
         });
-    }
-
-    /**
-     * 将解码的图片保存到SD卡
-     *
-     * @param bitmap
-     */
-    private void saveBitmap(Bitmap bitmap) {
-        huixianceshi.setImageBitmap(bitmap);
-        /*try {
-            String path = Environment.getExternalStorageDirectory().getPath()
-                    +"/decodeImage.jpg";
-            Log.d("linc","path is "+path);
-            OutputStream stream = new FileOutputStream(path);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
-            stream.close();
-            Log.e("linc","jpg okay!");
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e("linc","failed: "+e.getMessage());
-        }*/
     }
 
     @Override
