@@ -9,13 +9,9 @@
     android:orientation="vertical"
     tools:context="gang.com.screencontrol.MainActivity">
 
-    <ImageView
-        android:id="@+id/huixianceshi"
-        android:layout_width="match_parent"
-        android:layout_height="100dp" />
 
-    <LinearLayout
-        android:id="@+id/contain_view"
+    <RelativeLayout
+        android:id="@+id/contain_view_xiuding"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="20dp"
@@ -24,36 +20,15 @@
         android:layout_marginTop="20dp"
         android:layout_weight="3"
         android:background="@mipmap/timg"
-        android:orientation="vertical">
-
+        >
         <TextView
-            android:id="@+id/jiekouhuidiao"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="接口回调好使不"
-            android:textColor="#FFFFFF"
-            android:visibility="gone" />
-
-        <com.xiaopo.flying.sticker.StickerView
-            android:id="@+id/sticker_view"
+            android:id="@+id/model_add_window"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center">
-            <!-- custom, maybe you will like to put an ImageView-->
-            <ImageView
-
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <TextView
-                android:id="@+id/model_add_window"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="暂 无 模 式"
-                android:textSize="60dp" />
-        </com.xiaopo.flying.sticker.StickerView>
-    </LinearLayout>
+            android:gravity="center"
+            android:text="暂 无 模 式"
+            android:textSize="60dp" />
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

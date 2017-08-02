@@ -42,7 +42,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
     private RecyclerView recyle_media;
     private MediaAdapter mediaadapter;
     private List<Mediabean_childfolder.BodyBean.FolderInfoBean> mediabean_childfolders = new ArrayList<>();
-    private List<MediaBean_childdetial> mdata_child_detial = new ArrayList<>();
+    private List<MediaBean_childdetial.BodyBean> mdata_child_detial = new ArrayList<>();
     private List<MediaBean_child.BodyBean.InfolistBean> mdata_child = new ArrayList<>();
     private Gson gson = new Gson();
     private static  MediaAddCallBackListener mymediaaddListener1;
@@ -160,7 +160,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
                     } else if (allmodelobject.getString("type").equals("GETMEDIAFILEINFO")) {
                         LogUtil.d("获取的所有媒体list子文件夹的单个详细信息", text + "呵呵呵");
                         String bodystring = allmodelobject.getString("body");
-                        MediaBean_childdetial msg = gson.fromJson(bodystring, MediaBean_childdetial.class);
+                        MediaBean_childdetial.BodyBean msg = gson.fromJson(bodystring, MediaBean_childdetial.BodyBean.class);
                         mdata_child_detial.add(msg);
                         mHasLoadedOnce = true;
                         showRecyleview();
@@ -197,7 +197,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
      * @author fox
      */
     public interface MediaAddCallBackListener {
-        void OnAddMediaView(MediaBean_childdetial mediaBean_childdetial);
+        void OnAddMediaView(MediaBean_childdetial.BodyBean mediaBean_childdetial);
     }
 
     @Override

@@ -109,8 +109,8 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                     MainService.addListener(this);
                     webSocket.send("    {\n" +
                             "       \"body\" : {\n" +
-                            "          \"userName\" : \"11111\",\n" +
-                            "          \"userPassword\" : \"11111\"\n" +
+                            "          \"userName\" : \"Admin\",\n" +
+                            "          \"userPassword\" : \"admin\"\n" +
                             "       },\n" +
                             "       \"guid\" : \"M-0\",\n" +
                             "       \"type\" : \"QUERYUSERLOGIN\"\n" +
@@ -155,7 +155,6 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
     /**
      * https://www.showdoc.cc/2452?page_id=11985
      * 登录接口的使用
-     *
      * @param text
      */
     @Override

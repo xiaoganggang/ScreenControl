@@ -167,7 +167,7 @@ public class MainService extends Service {
                 .build();
 
         //Request request = new Request.Builder().url("wss://" + adress + ":" + port).build();
-        Request request = new Request.Builder().url("wss://192.168.10.219:7681").build();
+        Request request = new Request.Builder().url("wss://192.168.10.57:7681").build();
         //建立连接
         mOkHttpClient.newWebSocket(request, new WebSocketListener() {
             @Override
