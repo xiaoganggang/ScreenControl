@@ -37,6 +37,7 @@ public class DragScaleView extends View implements View.OnTouchListener {
     private static final int CENTER = 0x19;
     private int offset = 20;
     protected Paint paint = new Paint();
+    public boolean mClick = false;
 
 
     public static interface OnTouchLayoutchageListener

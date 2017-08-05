@@ -1,5 +1,6 @@
 package gang.com.screencontrol;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -17,7 +18,9 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import gang.com.screencontrol.fragment.Login_Fragment_one;
 import gang.com.screencontrol.fragment.Login_Fragment_two;
+import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.AppManager;
+import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.websocketo.Task;
 
 /**
@@ -61,6 +64,8 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.login_out:
+                Intent stopIntent = new Intent(LoginActivity.this, MainService.class);
+                stopService(stopIntent);
                 AppManager.finishActivity(LoginActivity.this);
                 break;
         }
