@@ -99,11 +99,13 @@ public class DragScaleView extends View implements View.OnTouchListener {
                     (int) event.getY());
         }
         // 处理拖动事件
-        delDrag(v, event, action);
-        invalidate();
-        if (mOnTouchLayoutchageListener!=null)
-        {
-            mOnTouchLayoutchageListener.onTouchlayout(v.getTop(), v.getLeft());
+        if(mClick){
+            delDrag(v, event, action);
+            invalidate();
+            if (mOnTouchLayoutchageListener!=null)
+            {
+                mOnTouchLayoutchageListener.onTouchlayout(v.getTop(), v.getLeft());
+            }
         }
         return false;
     }

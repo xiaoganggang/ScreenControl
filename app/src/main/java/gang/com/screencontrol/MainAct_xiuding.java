@@ -15,12 +15,14 @@ import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog.Builder;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -29,6 +31,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -47,16 +50,22 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import gang.com.screencontrol.adapter.ViewPagerAdapter;
-import gang.com.screencontrol.bean.LoadVideoWallInfo_Bean;
-import gang.com.screencontrol.bean.MediaBean_childdetial;
-import gang.com.screencontrol.bean.MobelBean;
-import gang.com.screencontrol.bean.ScreenContent;
+import gang.com.screencontrol.bean.CengYuansuBean;
+import gang.com.screencontrol.bean.LoadVideoWallInfo_Bean.BodyBean.SlaveInfoBean.MonitorInfoBean;
+import gang.com.screencontrol.bean.MediaBean_childdetial.BodyBean;
+import gang.com.screencontrol.bean.MobelBean.BasicInfoBean;
+import gang.com.screencontrol.bean.ScreenContent.BodyBean.ContentBeanX;
+import gang.com.screencontrol.bean.ScreenContent.BodyBean.ContentBeanX.ContentBean;
+import gang.com.screencontrol.defineview.AlertDialog;
 import gang.com.screencontrol.defineview.DragScaleView;
-import gang.com.screencontrol.defineview.DragView1;
 import gang.com.screencontrol.fragment.Media_Fragment;
+import gang.com.screencontrol.fragment.Media_Fragment.MediaAddCallBackListener;
 import gang.com.screencontrol.fragment.Model_Fragment;
+import gang.com.screencontrol.fragment.Model_Fragment.ModelAddCallBackListener;
 import gang.com.screencontrol.service.MainService;
+import gang.com.screencontrol.service.MainService.MessageCallBackListener;
 import gang.com.screencontrol.util.AppManager;
+import gang.com.screencontrol.util.JsonUitl;
 import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.WebSocket;
@@ -67,7 +76,7 @@ import okhttp3.WebSocket;
  * Base64解码问题  http://blog.sina.com.cn/s/blog_54410d940101esw5.html
  * TabLayout的使用  ：http://www.jianshu.com/p/2b2bb6be83a8
  */
-public class MainAct_xiuding extends AppCompatActivity implements MainService.MessageCallBackListener, Media_Fragment.MediaAddCallBackListener, Model_Fragment.ModelAddCallBackListener {
+public class MainAct_xiuding extends AppCompatActivity implements MessageCallBackListener, MediaAddCallBackListener, ModelAddCallBackListener {
     @BindView(R.id.lastmodel)
     ImageView lastmodel;
     @BindView(R.id.nextmodel)
@@ -99,6 +108,20 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
     LinearLayout lockYorn;
     @BindView(R.id.voice_controller)
     ImageView voiceController;
+    @BindView(R.id.deleteceng)
+    ImageView deleteceng;
+    @BindView(R.id.save_ceng)
+    ImageView saveCeng;
+    @BindView(R.id.quanping_ceng)
+    ImageView quanpingCeng;
+    @BindView(R.id.caifen_controller)
+    ImageView caifenController;
+    @BindView(R.id.light_controller)
+    ImageView lightController;
+    @BindView(R.id.top_ceng)
+    ImageView topCeng;
+    @BindView(R.id.bottom_ceng)
+    ImageView bottomCeng;
     /**
      * 选项卡标题
      */
@@ -116,10 +139,10 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
     //用来放显示的图片的list，避免新的返回覆盖
     private List<String> list_returnpc = new ArrayList<>();
     //用来放层信息的list
-    List<ScreenContent.BodyBean.ContentBeanX> ContentXlist = new ArrayList<>();
+    List<ContentBeanX> ContentXlist = new ArrayList<>();
     //for循环 Contentlist时候的变量初始化
     int i_contentxlist = 0;
-    List<ScreenContent.BodyBean.ContentBeanX.ContentBean> yuansulist;
+    List<ContentBean> yuansulist;
     //全局变量，屏幕ID
     private int slaveID;
     //用来存放所有的图层
@@ -128,6 +151,13 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
     private List<String> guidlist = new ArrayList<>();
     //判断声音按钮点击状态
     private int state_voice = 0;
+    /**
+     * 下面两个全局变量都是在MAXWALLSCREENCONTENT这个接口解析时候执行点击事件对这两个赋值，给这两个全局变量操作
+     */
+    //用来表示点击的那个层特定的数据
+    private ContentBeanX quan_One_contentbean;
+    //用来表示点击的那个层里面具有的特定的元素list，已经被转成String的json
+    private String quanju_yuansu_list_json;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -244,7 +274,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
         final Dialog dialog_clock = new Dialog(MainAct_xiuding.this, R.style.dialog);
         dialog_clock.setContentView(R.layout.dialog_clockl);
         Button dialog_model_add = (Button) dialog_clock.findViewById(R.id.dialog_clock_add);
-        dialog_model_add.setOnClickListener(new View.OnClickListener() {
+        dialog_model_add.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 webSocket.send("    {\n" +
@@ -278,7 +308,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
             }
         });
         Button dialog_close = (Button) dialog_clock.findViewById(R.id.dialog_clock_close);
-        dialog_close.setOnClickListener(new View.OnClickListener() {
+        dialog_close.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialog_clock.cancel();
@@ -295,7 +325,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
         final Dialog dialog_weather = new Dialog(MainAct_xiuding.this, R.style.dialog);
         dialog_weather.setContentView(R.layout.dialog_weather);
         Button dialog_model_add = (Button) dialog_weather.findViewById(R.id.dialog_weather_add);
-        dialog_model_add.setOnClickListener(new View.OnClickListener() {
+        dialog_model_add.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 webSocket.send("    {\n" +
@@ -334,7 +364,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
             }
         });
         Button dialog_close = (Button) dialog_weather.findViewById(R.id.dialog_weather_close);
-        dialog_close.setOnClickListener(new View.OnClickListener() {
+        dialog_close.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialog_weather.cancel();
@@ -351,7 +381,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
         mDragView.isFocused();
         mDragView.setBackgroundResource(R.mipmap.video);
         mDragView.setClickable(true);//相当于android:clickable="true"
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         mDragView.setLayoutParams(lp);  //image的布局方式
         //设置图片的位置
         lp.setMargins(0, 0, 30, 40);
@@ -372,8 +402,8 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
          * @setMessage 设置对话框消息提示
          * setXXX方法返回Dialog对象，因此可以链式设置属性
          */
-        final android.support.v7.app.AlertDialog.Builder normalDialog =
-                new android.support.v7.app.AlertDialog.Builder(MainAct_xiuding.this);
+        final Builder normalDialog =
+                new Builder(MainAct_xiuding.this);
         normalDialog.setIcon(R.mipmap.applog);
         normalDialog.setTitle("播放模式");
         normalDialog.setMessage("是否播放" + modelname + "?");
@@ -419,10 +449,9 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
         //首先判断ContentXlist不为0就是里面有层
         if (ContentXlist.size() > 0) {
             Iterator<DragScaleView> iterator = dragScaleViewList.iterator();
-            while(iterator.hasNext()){
+            while (iterator.hasNext()) {
                 iterator.next().mClick = true;
             }
-
             /*for ( i_contentxlist = 0; i_contentxlist < ContentXlist.size(); i_contentxlist++) {
                 dragScaleViewList.get(i_contentxlist).setClickable(true);
                 //获取layerid
@@ -435,35 +464,6 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                     public void onClick(View v) {
                         LogUtil.d("FUCK",ContentXlist.get(i_contentxlist-1).getGuid());
                         ToastUtil.show(MainAct_xiuding.this, "位置变化" + "顶部" + v.getTop() + "左边" + v.getLeft()+ContentXlist.get(i_contentxlist-1).getGuid());
-                        webSocket.send("    {\n" +
-                                "       \"body\" : {\n" +
-                                "          \"alpha\" : 1.0,\n" +
-                                "          \"highlight\" : false,\n" +
-                                "          \"layerID\" : "+ContentXlist.get(i_contentxlist-1).getGuid()+"\",\n" +
-                                "          \"layerItem\" : [\n" +
-                                "             {\n" +
-                                "                \"ID\" : 217,\n" +
-                                "                \"description\" : \"\",\n" +
-                                "                \"majorID\" : -1,\n" +
-                                "                \"minorID\" : 176,\n" +
-                                "                \"name\" : \"baidu\",\n" +
-                                "                \"playOrder\" : 0,\n" +
-                                "                \"playTime\" : 30,\n" +
-                                "                \"refreshTime\" : 1719895702,\n" +
-                                "                \"type\" : 51,\n" +
-                                "                \"validSource\" : 1\n" +
-                                "             }\n" +
-                                "          ],\n" +
-                                "          \"pieceXml\" : \"\n" +
-                                "              <Layer>\\n    \n" +
-                                "                <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n\n" +
-                                "            </Layer>\\n\",\n" +
-                                "          \"type\" : \"Delete\",\n" +
-                                "          \"zOrder\" : 12\n" +
-                                "       },\n" +
-                                "       \"guid\" : \"M-45\",\n" +
-                                "       \"type\" : \"LAYERACTION\"\n" +
-                                "    }");
                     }
                 });
             }*/
@@ -475,8 +475,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
     /**
      * 发送层变化移动请求
      */
-    private void move_layer()
-    {
+    private void move_layer() {
     }
 
     /**
@@ -485,14 +484,18 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
     private void closelock_SCREENCONTENT() {
         //首先判断ContentXlist不为0就是里面有层
         if (ContentXlist.size() > 0) {
-            for (int i = 0; i < ContentXlist.size(); i++) {
-                dragScaleViewList.get(i).setClickable(false);
-                dragScaleViewList.get(i).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ToastUtil.show(MainAct_xiuding.this, "清先开锁");
-                    }
-                });
+            Iterator<DragScaleView> iterator = dragScaleViewList.iterator();
+            while (iterator.hasNext()) {
+                iterator.next().mClick = false;
+                /*for (int i = 0; i < ContentXlist.size(); i++) {
+                    dragScaleViewList.get(i).setClickable(false);
+                    dragScaleViewList.get(i).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            ToastUtil.show(MainAct_xiuding.this, "清先开锁");
+                        }
+                    });
+                }*/
             }
         }
     }
@@ -559,7 +562,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
      * @param mediaBean_childdetial
      */
     @Override
-    public void OnAddMediaView(MediaBean_childdetial.BodyBean mediaBean_childdetial) {
+    public void OnAddMediaView(BodyBean mediaBean_childdetial) {
         //同时在这里执行view添加到StickView的操作
         if (mediaBean_childdetial.getFolderId() == 11) {
             Media_Addceng();
@@ -576,7 +579,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
      * @param mobel_list
      */
     @Override
-    public void OnAddModelView(View v, final MobelBean.BasicInfoBean modelbean, List<MobelBean.BasicInfoBean> mobel_list) {
+    public void OnAddModelView(View v, final BasicInfoBean modelbean, List<BasicInfoBean> mobel_list) {
 
         if (modeljudge_state == 0) {
             start_window();
@@ -585,7 +588,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
 
         } else {
             Snackbar.make(v, "显示窗已有模式确认要替换吗?", Snackbar.LENGTH_LONG)
-                    .setAction("确认", new View.OnClickListener() {
+                    .setAction("确认", new OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             //替换时点击的模式内容的id和模式内容的名称
@@ -628,7 +631,15 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                 try {
                     JSONObject allmodelobject = new JSONObject(text);
                     /**
-                     *显示屏内的层
+                     * 第一步
+                     * 首先应该是先加载显示墙，看看slaveInfo里面包含几个，就有几个slaveid，几路显示
+                     * 然后遍历加到list里面创建一个list<String></String>
+                     */
+                    /**
+                     * 第二步
+                     *显示屏内的层,首先应该遍历第一步中的list，slaveid看有几个显示器，
+                     * 遍历之后让那些层显示在固定的显示器
+                     * 在点击事件中，对于固定的层在传递的时候，把所在显示器对应的slaveid也要传递过去 setListener(mDragView，slaveid)
                      */
                     if (allmodelobject.getString("type").equals("MAXWALLSCREENCONTENT")) {
                         //每次接到这个层的请求时候，都要清空之前的ContentXlist，同时要清空之前的布局中所有的View
@@ -644,7 +655,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                         //获取对应的slaveID,对应的控制器
                         slaveID = contentoboj.getInt("slaveID");
                         //将Array数据转换成List
-                        ContentXlist = gson.fromJson(slaveInfoJsonArray.toString(), new TypeToken<List<ScreenContent.BodyBean.ContentBeanX>>() {
+                        ContentXlist = gson.fromJson(slaveInfoJsonArray.toString(), new TypeToken<List<ContentBeanX>>() {
                         }.getType());
                         for (int i = 0; i < ContentXlist.size(); i++) {
                             DragScaleView mDragView = new DragScaleView(MainAct_xiuding.this);  //创建imageview
@@ -654,7 +665,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
 
                             int w = ContentXlist.get(i).getRight() - ContentXlist.get(i).getLeft();
                             int h = ContentXlist.get(i).getBottom() - ContentXlist.get(i).getTop();
-                            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(w, h);
+                            LayoutParams lp = new LayoutParams(w, h);
                             mDragView.setLayoutParams(lp);  //image的布局方式
                             //mDragView.setTag(ContentXlist.get(i).getGuid());
                             mDragView.setTag(ContentXlist.get(i));
@@ -662,7 +673,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                             lp.setMargins(ContentXlist.get(i).getLeft(), ContentXlist.get(i).getTop(), 0, 0);
                             containViewXiuding.addView(mDragView);
                             //向两个list中添加数据
-                            setListener(mDragView);
+                            setListener(mDragView, slaveID);
                             dragScaleViewList.add(mDragView);
                             guidlist.add(ContentXlist.get(i).getGuid());
                             //rebuild(mDragView1,123);
@@ -670,7 +681,8 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                         }
                     }
 
-                    /**SS
+                    /**
+                     * 第三步向层中添加图片
                      * 如果监听到了显示窗回显的字段
                      * 接口地址如下http://www.showdoc.cc/2452?page_id=13041     MAXWALLSNAPSHOT
                      */
@@ -681,7 +693,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                         } else {
                             String bodystring_snapshot = allmodelobject.getString("body");
                             JSONObject snapshotoboj = new JSONObject(bodystring_snapshot);
-                            LogUtil.e("回显层中内容", snapshotoboj.getInt("slaveID") + "");
+                            // LogUtil.e("回显层中内容", snapshotoboj.getInt("slaveID") + "");
                             //snapshot获取的slaveID
                             snapshotoboj.getInt("slaveID");
                             //循环遍历
@@ -738,7 +750,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                         JSONObject slaveInfoJsonObject = slaveInfoJsonArray.getJSONObject(0);
                         JSONArray monitorInfoJsonArray = slaveInfoJsonObject.getJSONArray("monitorInfo");
                         //将Array数据转换成List
-                        List<LoadVideoWallInfo_Bean.BodyBean.SlaveInfoBean.MonitorInfoBean> MonitorInfolist = gson.fromJson(monitorInfoJsonArray.toString(), new TypeToken<List<LoadVideoWallInfo_Bean.BodyBean.SlaveInfoBean.MonitorInfoBean>>() {
+                        List<MonitorInfoBean> MonitorInfolist = gson.fromJson(monitorInfoJsonArray.toString(), new TypeToken<List<MonitorInfoBean>>() {
                         }.getType());
                         if (MonitorInfolist.size() == 0) {
                             //墙配置信息为0，显示墙显示内容为空
@@ -777,15 +789,16 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
 
     /**
      * 设置监听
+     *
      * @param dragView
      */
-    private void setListener(DragScaleView dragView ) {
-        if(LOCKSTATE == 1){
+    private void setListener(DragScaleView dragView, final int slaveID) {
+        if (LOCKSTATE == 1) {
             // 开锁状态 可以点击
             dragView.mClick = true;
             dragView.setClickable(true);
         }
-        dragView.setOnClickListener(new View.OnClickListener() {
+        dragView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (v instanceof DragScaleView) {
@@ -793,48 +806,65 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                         // 禁止点击
                         return;
                     }
-                    ScreenContent.BodyBean.ContentBeanX contentBeanX = (ScreenContent.BodyBean.ContentBeanX)v.getTag();
-                    ScreenContent.BodyBean.ContentBeanX.ContentBean contentBean = (ScreenContent.BodyBean.ContentBeanX.ContentBean)v.getTag();
-                  //  ScreenContent.BodyBean.ContentBeanX contentBeanX;
-//                    LogUtil.d("FUCK", ContentXlist.get(i_contentxlist - 1).getGuid());
-                    LogUtil.d("FUCK", "guid" + contentBeanX.getGuid());
-                    ToastUtil.show(MainAct_xiuding.this, "位置变化" + "顶部" + v.getTop() + "左边" + v.getLeft() + contentBeanX.getGuid());
-                    webSocket.send("    {\n" +
-                            "       \"body\" : {\n" +
-                            "          \"alpha\" : 1.0,\n" +
-                            "          \"highlight\" : false,\n" +
-                            "          \"layerID\" : "+contentBeanX.getGuid()+",\n" +
-                            "          \"layerItem\" : [\n" +
-                            "             {\n" +
-                            "                \"ID\" :"+contentBean.getLayerItemID()+",\n" +
-                            "                \"description\" : \"\",\n" +
-                            "                \"majorID\" : "+contentBean.getMajorID()+",\n" +
-                            "                \"minorID\" : "+contentBean.getMinorID()+",\n" +
-                            "                \"name\" : \""+contentBean.getName()+"\",\n" +
-                            "                \"playOrder\" : "+contentBean.getPlayOrder()+",\n" +
-                            "                \"playTime\" : "+contentBean.getPlayTime()+",\n" +
-                            "                \"refreshTime\" : "+ contentBean.getRefreshTime()+",\n" +
-                            "                \"type\" : "+contentBean.getType()+",\n" +
-                            "                \"validSource\" : 1\n" +
-                            "             }\n" +
-                            "          ],\n" +
-                            "          \"pieceXml\" : \"\n" +
-                            "              <Layer>\\n    \n" +
-                            "                <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n\n" +
-                            "            </Layer>\\n\",\n" +
-                            "          \"type\" : \"Move\",\n" +
-                            "          \"zOrder\" : "+contentBeanX.getZorder()+"\n" +
-                            "       },\n" +
-                            "       \"guid\" : \"M-45\",\n" +
-                            "       \"type\" : \"LAYERACTION\"\n" +
-                            "    }");
+                    ContentBeanX contentBeanX = (ContentBeanX) v.getTag();
+                    //讲bean转成json，取到其中的元素数组
+                    // ScreenContent.BodyBean.ContentBeanX.ContentBean contentBean=new ScreenContent.BodyBean.ContentBeanX.ContentBean();
+                    try {
+                        JSONObject bigcontent = new JSONObject(JsonUitl.toJson(contentBeanX));
+                        String content_yuansu = bigcontent.getString("Content");
+                        List<ContentBean> contentBean = gson.fromJson(content_yuansu, new TypeToken<List<ContentBean>>() {
+                        }.getType());
+                        List<CengYuansuBean> cengYuansuBeenlist = new ArrayList<CengYuansuBean>();
+                        LogUtil.e("fuck转过来的json", content_yuansu);
+                        for (int i = 0; i < contentBean.size(); i++) {
+                            CengYuansuBean cengYuansuBean = new CengYuansuBean();
+                            cengYuansuBean.setID(contentBean.get(i).getLayerItemID());
+                            cengYuansuBean.setName(contentBean.get(i).getName());
+                            cengYuansuBean.setType(contentBean.get(i).getLayerItemType());
+                            cengYuansuBean.setMajorID(contentBean.get(i).getMajorID());
+                            cengYuansuBean.setMinorID(contentBean.get(i).getMinorID());
+                            cengYuansuBean.setPlayOrder(contentBean.get(i).getPlayOrder());
+                            cengYuansuBean.setPlayTime(contentBean.get(i).getPlayTime());
+                            //cengYuansuBean.setValidSource();
+                            cengYuansuBean.setRefreshTime(contentBean.get(i).getRefreshTime());
+                            //cengYuansuBean.setProtoType();
+                            cengYuansuBean.setDescription(contentBean.get(i).getDescription());
+                            //cengYuansuBean.setUrlList();
+                            cengYuansuBean.setCascadeServerId(contentBean.get(i).getCascadeServerId());
+                            cengYuansuBean.setCascadeServerSourceType(contentBean.get(i).getCascadeServerSourceType());
+                            //cengYuansuBean.setReserved();
+                            cengYuansuBean.setItemThumbnialPath(contentBean.get(i).getItemThumbnailPath());
+                            //cengYuansuBean.setSourceTotalTime();
+                            cengYuansuBeenlist.add(cengYuansuBean);
+                        }
+                        //将cengYuansuBeenlist转成json数组发送请求·
+                        String yuansu_list_json = JsonUitl.objectToString(cengYuansuBeenlist);
+                          //把下面两个赋值给全局变量
+                        quanju_yuansu_list_json=yuansu_list_json;
+                        quan_One_contentbean = contentBeanX;
+                        ToastUtil.show(MainAct_xiuding.this, "位置变化" + "顶部" + v.getTop() + "左边" + v.getLeft() + contentBeanX.getGuid());
+                        String requesturl = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                                "\"highlight\": false,\n" +
+                                "\"layerID\": " + contentBeanX.getGuid() + ",\n" +
+                                "\"layerItem\":" + yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                                "\"type\": \"Move\",\n" +
+                                "\"zOrder\": " + contentBeanX.getZorder() + "\n" +
+                                "},\n" +
+                                "\"guid\": \"M-45\",\n" +
+                                "\"type\": \"LAYERACTION\"\n" +
+                                "}";
+                        LogUtil.e("FUCK", "requesturl" + requesturl);
+                        webSocket.send(requesturl);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
                 }
             }
         });
     }
 
-
-    @OnClick({R.id.voice_controller, R.id.lastmodel, R.id.nextmodel, R.id.close_software, R.id.startlock, R.id.clock, R.id.weather, R.id.pause_player, R.id.start_remote_control})
+    @OnClick({R.id.deleteceng, R.id.voice_controller, R.id.lastmodel, R.id.nextmodel, R.id.close_software, R.id.startlock, R.id.clock, R.id.weather, R.id.pause_player, R.id.start_remote_control, R.id.save_ceng, R.id.quanping_ceng, R.id.caifen_controller, R.id.light_controller, R.id.top_ceng, R.id.bottom_ceng})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.lastmodel:
@@ -892,9 +922,9 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                 break;
             case R.id.close_software:
                 //关闭软件，关闭所有Activity
-                new gang.com.screencontrol.defineview.AlertDialog(MainAct_xiuding.this).builder().setTitle("退出当前程序")
+                new AlertDialog(MainAct_xiuding.this).builder().setTitle("退出当前程序")
                         .setMsg("确定退出鼎泓导播吗？")
-                        .setPositiveButton("确认退出", new View.OnClickListener() {
+                        .setPositiveButton("确认退出", new OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 Intent stopIntent = new Intent(MainAct_xiuding.this, MainService.class);
@@ -902,7 +932,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                                 AppManager.finishAllActivity();
                             }
                         })
-                        .setNegativeButton("取消", new View.OnClickListener() {
+                        .setNegativeButton("取消", new OnClickListener() {
                             @Override
                             public void onClick(View v) {
 
@@ -944,6 +974,46 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                     MuteAllLayer(false);
                 }
                 break;
+            case R.id.deleteceng:
+                //删除该层
+                ToastUtil.show(MainAct_xiuding.this, "点击了改层的删除按钮" + quan_One_contentbean.getGuid());
+                String request_delete_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                        "\"highlight\": false,\n" +
+                        "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
+                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                        "\"type\": \"Move\",\n" +
+                        "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
+                        "},\n" +
+                        "\"guid\": \"M-45\",\n" +
+                        "\"type\": \"LAYERACTION\"\n" +
+                        "}";
+                webSocket.send(request_delete_ceng);
+                break;
+            case R.id.save_ceng:
+                break;
+            case R.id.quanping_ceng:
+                break;
+            case R.id.caifen_controller:
+                break;
+            case R.id.light_controller:
+                //调高亮度该层
+                ToastUtil.show(MainAct_xiuding.this,"调高亮度该层");
+                String request_light_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                        "\"highlight\": false,\n" +
+                        "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
+                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                        "\"type\": \"Highlight\",\n" +
+                        "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
+                        "},\n" +
+                        "\"guid\": \"M-45\",\n" +
+                        "\"type\": \"LAYERACTION\"\n" +
+                        "}";
+                webSocket.send(request_light_ceng);
+                break;
+            case R.id.top_ceng:
+                break;
+            case R.id.bottom_ceng:
+                break;
         }
     }
 
@@ -953,9 +1023,9 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            new gang.com.screencontrol.defineview.AlertDialog(MainAct_xiuding.this).builder().setTitle("退出当前程序")
+            new AlertDialog(MainAct_xiuding.this).builder().setTitle("退出当前程序")
                     .setMsg("确定退出鼎泓导播吗？")
-                    .setPositiveButton("确认退出", new View.OnClickListener() {
+                    .setPositiveButton("确认退出", new OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             Intent stopIntent = new Intent(MainAct_xiuding.this, MainService.class);
@@ -963,7 +1033,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MainService.Me
                             AppManager.finishAllActivity();
                         }
                     })
-                    .setNegativeButton("取消", new View.OnClickListener() {
+                    .setNegativeButton("取消", new OnClickListener() {
                         @Override
                         public void onClick(View v) {
 

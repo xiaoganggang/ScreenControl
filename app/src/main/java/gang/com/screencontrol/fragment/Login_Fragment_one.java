@@ -165,21 +165,27 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                 LogUtil.d("哈哈哈", text);
                 try {
                     JSONObject loginobject = new JSONObject(text);
-                    String bodystring = loginobject.getString("body");
-                    JSONObject bodyobject = new JSONObject(bodystring);
-                    bodyobject.getBoolean("loginSuccess");
-                    if (loginobject.getString("type").equals("QUERYUSERLOGIN") && bodyobject.getBoolean("loginSuccess") == true) {
-                        StartActivity(MainAct_xiuding.class);
-                    } else if (loginobject.getString("type").equals("QUERYUSERLOGIN") && bodyobject.getInt("loginType") == 3) {
-                        ToastUtil.show(getActivity(), "用户已在其他设备登录");
-                    } else {
-                        ToastUtil.show(getActivity(), "请输入正确的用户名和密码");
+                    if (loginobject.getString("type").equals("QUERYUSERLOGIN") ) {
+                        /**
+                         * 这里需要注意的是假如登录成功返回的数据会缺少一个字段loginType ，登录失败这个字段才会有值
+                         */
+                        String bodystring = loginobject.getString("body");
+                        JSONObject bodyobject = new JSONObject(bodystring);
+                        bodyobject.getBoolean("loginSuccess");
+                        if (bodyobject.getBoolean("loginSuccess") == true)
+                        {
+                            StartActivity(MainAct_xiuding.class);
+                        }
+                        else if ( bodyobject.getInt("loginType") == 3) {
+                            ToastUtil.show(getActivity(), "用户已在其他设备登录");
+                        } else {
+                            ToastUtil.show(getActivity(), "请输入正确的用户名和密码");
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
-
     }
 }
