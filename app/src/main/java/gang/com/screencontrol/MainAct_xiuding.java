@@ -24,6 +24,10 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
@@ -158,14 +162,22 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
     private ContentBeanX quan_One_contentbean;
     //用来表示点击的那个层里面具有的特定的元素list，已经被转成String的json
     private String quanju_yuansu_list_json;
+    //参数传递时候，与1920和1080形成比例控制pieceXml
+    private int wallheight=0;
+    private int wallwidth=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //取消顶部标题
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //设置全屏
+        getWindow().setFlags(WindowManager.LayoutParams. FLAG_FULLSCREEN , WindowManager.LayoutParams. FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main_act_xiuding);
         ButterKnife.bind(this);
         AppManager.addActivity(this);
         initWebsocket();
+        getWall_content();
         //主动向服务器发送获取大屏内容请求
         SendNotify();
         //加载显示墙信息指令发送
@@ -183,6 +195,24 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
         //尽量维持这个值小，特别是有复杂布局的时候，因为如果这个值很大，就会占用很多内存，如果只有3-4page的话，可以全部保持active，可以保持page切换的顺滑
         mViewPagerjingdian.setOffscreenPageLimit(4);
         //预加载问题如何取消
+    }
+
+    /**
+     * 获取app界面中VIew显示墙的高度和宽度---id:contain_view_xiuding
+     * 获取屏幕宽高要在执行完OnCreate，才可以onMeasure。。。这个可以获取应该是有回调方法
+     * 需要注意的是屏幕的实际宽高比大屏幕的宽高按照比例小十分之一
+     */
+    private void getWall_content() {
+        ViewTreeObserver vto2 = containViewXiuding.getViewTreeObserver();
+        vto2.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                containViewXiuding.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                wallheight = containViewXiuding.getHeight();
+                wallwidth = containViewXiuding.getWidth();
+                ToastUtil.show(MainAct_xiuding.this, "屏幕高度" + containViewXiuding.getHeight() + "屏幕宽度" + containViewXiuding.getWidth());
+            }
+        });
     }
 
     /**
@@ -664,13 +694,23 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                             //mDragView.setClickable(false);//相当于android:clickable="true"
 
                             int w = ContentXlist.get(i).getRight() - ContentXlist.get(i).getLeft();
+                            float w_float=w;
+                            float hehewallwidth=wallwidth;
+                            float finally_w=w_float*(hehewallwidth/1920);
                             int h = ContentXlist.get(i).getBottom() - ContentXlist.get(i).getTop();
-                            LayoutParams lp = new LayoutParams(w, h);
+                            float h_float=h;
+                            float hahawallheight=wallheight;
+                            float finally_h=h_float*(hahawallheight/1080);
+                            LayoutParams lp = new LayoutParams((int) finally_w, (int) finally_h);
                             mDragView.setLayoutParams(lp);  //image的布局方式
                             //mDragView.setTag(ContentXlist.get(i).getGuid());
                             mDragView.setTag(ContentXlist.get(i));
                             //设置图片的位置
-                            lp.setMargins(ContentXlist.get(i).getLeft(), ContentXlist.get(i).getTop(), 0, 0);
+                            float m_left=ContentXlist.get(i).getLeft();
+                            float finally_m_left=m_left*(hehewallwidth/1920);
+                            float m_top=ContentXlist.get(i).getTop();
+                            float finally_m_top=m_top*(hahawallheight/1080);
+                            lp.setMargins((int) finally_m_left,(int)finally_m_top,0, 0);
                             containViewXiuding.addView(mDragView);
                             //向两个list中添加数据
                             setListener(mDragView, slaveID);
@@ -839,14 +879,24 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                         }
                         //将cengYuansuBeenlist转成json数组发送请求·
                         String yuansu_list_json = JsonUitl.objectToString(cengYuansuBeenlist);
-                          //把下面两个赋值给全局变量
-                        quanju_yuansu_list_json=yuansu_list_json;
+                        //把下面两个赋值给全局变量
+                        quanju_yuansu_list_json = yuansu_list_json;
                         quan_One_contentbean = contentBeanX;
                         ToastUtil.show(MainAct_xiuding.this, "位置变化" + "顶部" + v.getTop() + "左边" + v.getLeft() + contentBeanX.getGuid());
+                        float left_float=v.getLeft();
+                        float top_float=v.getTop();
+                        //完美需要注意的是这里都不需要乘以以比例*1920/wallwidth，在绘制时候控制好比例就可以了
+                        float slaveleft = (left_float / wallwidth);
+                        float slavetop = (top_float / wallheight) ;
+                        float width_float=v.getRight()-v.getLeft();
+                        float height_float=v.getBottom()-v.getTop();
+                        float slavewidth=(width_float/wallwidth);
+                        float slaveheight=(height_float/wallheight);
+                        LogUtil.e("变换的比例","左端的比例"+slaveleft+"顶端的比例"+slavetop);
                         String requesturl = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
                                 "\"highlight\": false,\n" +
                                 "\"layerID\": " + contentBeanX.getGuid() + ",\n" +
-                                "\"layerItem\":" + yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                                "\"layerItem\":" + yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\""+slaveleft+"\\\" slavetop=\\\""+slavetop+"\\\" slavewidth=\\\""+slavewidth+"\\\" slaveheight=\\\""+slaveheight+"\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
                                 "\"type\": \"Move\",\n" +
                                 "\"zOrder\": " + contentBeanX.getZorder() + "\n" +
                                 "},\n" +
@@ -981,7 +1031,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                         "\"highlight\": false,\n" +
                         "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
                         "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
-                        "\"type\": \"Move\",\n" +
+                        "\"type\": \"Delete\",\n" +
                         "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
                         "},\n" +
                         "\"guid\": \"M-45\",\n" +
@@ -997,9 +1047,9 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 break;
             case R.id.light_controller:
                 //调高亮度该层
-                ToastUtil.show(MainAct_xiuding.this,"调高亮度该层");
+                ToastUtil.show(MainAct_xiuding.this, "调高亮度该层");
                 String request_light_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
-                        "\"highlight\": false,\n" +
+                        "\"highlight\": true,\n" +
                         "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
                         "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
                         "\"type\": \"Highlight\",\n" +
@@ -1011,8 +1061,32 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 webSocket.send(request_light_ceng);
                 break;
             case R.id.top_ceng:
+                ToastUtil.show(MainAct_xiuding.this, "调高该层位于顶部");
+                String request_top_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                        "\"highlight\": false,\n" +
+                        "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
+                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                        "\"type\": \"ZOrder\",\n" +
+                        "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
+                        "},\n" +
+                        "\"guid\": \"M-45\",\n" +
+                        "\"type\": \"LAYERACTION\"\n" +
+                        "}";
+                webSocket.send(request_top_ceng);
                 break;
             case R.id.bottom_ceng:
+                ToastUtil.show(MainAct_xiuding.this, "调高该层位于底部");
+                String request_bottom_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                        "\"highlight\": false,\n" +
+                        "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
+                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                        "\"type\": \"ZOrder\",\n" +
+                        "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
+                        "},\n" +
+                        "\"guid\": \"M-45\",\n" +
+                        "\"type\": \"LAYERACTION\"\n" +
+                        "}";
+                webSocket.send(request_bottom_ceng);
                 break;
         }
     }

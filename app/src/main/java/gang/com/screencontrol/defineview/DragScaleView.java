@@ -10,11 +10,12 @@ import android.view.View;
 
 /**
  * Created by xiaogangzai on 2017/7/28.
+ * http://blog.csdn.net/huiguixian/article/details/22193977
+ * 讲述 Android View的onTouchEvent和OnTouch区别
  */
 
 /**
  * @author Cj
- *
  */
 public class DragScaleView extends View implements View.OnTouchListener {
     protected int screenWidth;
@@ -40,15 +41,16 @@ public class DragScaleView extends View implements View.OnTouchListener {
     public boolean mClick = false;
 
 
-    public static interface OnTouchLayoutchageListener
-    {
+    public static interface OnTouchLayoutchageListener {
         void onTouchlayout(int top, int left);
     }
-    private OnTouchLayoutchageListener mOnTouchLayoutchageListener=null;
-    public void setTouchLayoutchageListener(OnTouchLayoutchageListener listener)
-    {
-        this.mOnTouchLayoutchageListener=listener;
+
+    private OnTouchLayoutchageListener mOnTouchLayoutchageListener = null;
+
+    public void setTouchLayoutchageListener(OnTouchLayoutchageListener listener) {
+        this.mOnTouchLayoutchageListener = listener;
     }
+
     /**
      * 初始化获取屏幕宽高
      */
@@ -78,11 +80,11 @@ public class DragScaleView extends View implements View.OnTouchListener {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        paint.setColor(Color.RED);
-        paint.setStrokeWidth(4.0f);
+        paint.setColor(Color.WHITE);
+        paint.setStrokeWidth(10.0f);
         paint.setStyle(Paint.Style.STROKE);
-        canvas.drawRect(offset, offset, getWidth() - offset, getHeight()
-                - offset, paint);
+        canvas.drawRect(0, 0, getWidth(), getHeight()
+                , paint);
     }
 
     @Override
@@ -99,11 +101,11 @@ public class DragScaleView extends View implements View.OnTouchListener {
                     (int) event.getY());
         }
         // 处理拖动事件
-        if(mClick){
+        if (mClick) {
+
             delDrag(v, event, action);
             invalidate();
-            if (mOnTouchLayoutchageListener!=null)
-            {
+            if (mOnTouchLayoutchageListener != null) {
                 mOnTouchLayoutchageListener.onTouchlayout(v.getTop(), v.getLeft());
             }
         }
@@ -319,4 +321,6 @@ public class DragScaleView extends View implements View.OnTouchListener {
     public int getCutHeight() {
         return getHeight() - 2 * offset;
     }
+
+
 }
