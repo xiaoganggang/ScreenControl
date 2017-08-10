@@ -67,21 +67,27 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_fragment_media, container, false);
         recyle_media = (RecyclerView) view.findViewById(R.id.recyle_media);
+        initWebsocket();
         //请求所有文件中的子文件
         isPrepared=true;
         lazyLoad();
 
         return view;
     }
-
+    /**
+     * 初始化websocket
+     */
+    private void initWebsocket() {
+        //接口回调，调用发送websocket接口
+        webSocket = MainService.getWebSocket();
+        if (null != webSocket) {
+            MainService.addListener(this);
+        }
+    }
     /**
      * 公共请求的方法
      */
     private void getData() {
-        //接口回调，调用发送websocket接口
-         webSocket = MainService.getWebSocket();
-        if (null != webSocket) {
-            MainService.addListener(this);
             webSocket.send("    {\n" +
                     "       \"body\" : {\n" +
                     "          \"parentID\" : 0\n" +
@@ -89,7 +95,6 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
                     "       \"guid\" : \"M-36\",\n" +
                     "       \"type\" : \"GETCHILDMEDIAFOLDERLIST\"\n" +
                     "    }");
-        }
     }
 
     private void showRecyleview() {
@@ -189,7 +194,30 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
         }
         getData();
     }
+    /**
+     * 在主Activity中点击刷新按钮时候调用的方法
+     */
+    public void refreshData()
+    {
+        LogUtil.e("调用刷新数据","啦啦啦分组数据");
+        if (mediaadapter!=null)
+        {
+            mediaadapter.clearData();
+            //重新发送请求获取数据
+            webSocket.send("    {\n" +
+                    "       \"body\" : {\n" +
+                    "          \"parentID\" : 0\n" +
+                    "       },\n" +
+                    "       \"guid\" : \"M-36\",\n" +
+                    "       \"type\" : \"GETCHILDMEDIAFOLDERLIST\"\n" +
+                    "    }");
+        }
+        else
+        {
+            LogUtil.e("调用刷新数据","请求数据失败，groupAdapter为空");
+        }
 
+    }
     /**
      * 定义一个接口
      * 方法参数是传递点击item的详细数据

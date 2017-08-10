@@ -76,25 +76,32 @@ public class Model_Fragment extends BaseFragment implements MainService.MessageC
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_fragment_mobel, container, false);
         mobel_recyle = (RecyclerView) view.findViewById(R.id.recyle_model);
+        initWebsocket();
         isPrepared = true;
         lazyLoad();
         return view;
     }
 
     /**
+     * 初始化websocket
+     */
+    private void initWebsocket() {
+        //接口回调，调用发送websocket接口
+        webSocket = MainService.getWebSocket();
+        if (null != webSocket) {
+            MainService.addListener(this);
+        }
+    }
+
+    /**
      * 获取模式数据
      */
     private void getModelData() {
-        //接口回调，调用发送websocket接口
-         webSocket = MainService.getWebSocket();
-        if (null != webSocket) {
-            MainService.addListener(this);
             webSocket.send("{\n" +
                     "       \"body\" : \"\",\n" +
                     "       \"guid\" : \"M-18\",\n" +
                     "       \"type\" : \"SEARCHPROGRAMBASICINFO\"\n" +
                     "    }");
-        }
     }
 
     private void showView() {
@@ -215,10 +222,31 @@ public class Model_Fragment extends BaseFragment implements MainService.MessageC
      * 定义一个接口
      * 方法参数是传递点击item的详细数据
      *
-     * @author fox
+     * @author xiaogangzai
      */
     public interface ModelAddCallBackListener {
         void OnAddModelView(View v, MobelBean.BasicInfoBean modelbean, List<MobelBean.BasicInfoBean> mobel_list);
+    }
+
+    /**
+     * 在主Activity中点击刷新按钮时候调用的方法
+     */
+    public void refreshData()
+    {
+        LogUtil.e("调用刷新数据","啦啦啦模式数据");
+        if (modelAdapter!=null)
+        {
+            modelAdapter.clearData();
+            //重新发送请求获取数据
+            webSocket.send("{\n" +
+                    "       \"body\" : \"\",\n" +
+                    "       \"guid\" : \"M-18\",\n" +
+                    "       \"type\" : \"SEARCHPROGRAMBASICINFO\"\n" +
+                    "    }");
+        }else
+        {
+            LogUtil.e("调用刷新数据","请求数据失败，modelAdapter为空");
+        }
     }
 
     @Override

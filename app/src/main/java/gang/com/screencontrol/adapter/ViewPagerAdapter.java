@@ -2,12 +2,16 @@ package gang.com.screencontrol.adapter;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentTransaction;
+import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import gang.com.screencontrol.R;
 import gang.com.screencontrol.bean.FragmentInfo;
 import gang.com.screencontrol.fragment.Device_Fragment;
 import gang.com.screencontrol.fragment.Grouping_Fragment;
@@ -23,7 +27,7 @@ import static java.lang.Class.forName;
  * Created by xiaogangzai on 2017/7/10.
  */
 
-public class ViewPagerAdapter extends FragmentStatePagerAdapter {
+public class ViewPagerAdapter extends FragmentPagerAdapter {
 
 
     private List<FragmentInfo> mFragments = new ArrayList<>(4);
@@ -36,10 +40,18 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
 
     private void initFragments() {
         mFragments.add(new FragmentInfo("模式", Model_Fragment.class));
+
         mFragments.add(new FragmentInfo("分组", Grouping_Fragment.class));
+
         mFragments.add(new FragmentInfo("媒体", Media_Fragment.class));
+
         mFragments.add(new FragmentInfo("设备", Device_Fragment.class));
+
         mFragments.add(new FragmentInfo("信息", Message_Fragment.class));
+
+
+
+
     }
 
     @Override
@@ -63,6 +75,7 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
     }
 
 
+
     @Override
     public CharSequence getPageTitle(int position) {
         return mFragments.get(position).getTitle();
@@ -74,5 +87,10 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
     public void destroyItem(ViewGroup container, int position, Object object) {
         //如果注释这行，那么不管怎么切换，page都不会被销毁
         super.destroyItem(container, position, object);
+    }
+
+    @Override
+    public Object instantiateItem(View container, int position) {
+        return super.instantiateItem(container, position);
     }
 }

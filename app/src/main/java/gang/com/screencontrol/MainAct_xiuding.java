@@ -13,8 +13,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.support.v7.app.AlertDialog.Builder;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -38,6 +41,9 @@ import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 
+import com.dou361.dialogui.DialogUIUtils;
+import com.dou361.dialogui.listener.DialogUIItemListener;
+import com.dou361.dialogui.listener.DialogUIListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -62,8 +68,11 @@ import gang.com.screencontrol.bean.ScreenContent.BodyBean.ContentBeanX;
 import gang.com.screencontrol.bean.ScreenContent.BodyBean.ContentBeanX.ContentBean;
 import gang.com.screencontrol.defineview.AlertDialog;
 import gang.com.screencontrol.defineview.DragScaleView;
+import gang.com.screencontrol.fragment.Device_Fragment;
+import gang.com.screencontrol.fragment.Grouping_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment.MediaAddCallBackListener;
+import gang.com.screencontrol.fragment.Message_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment.ModelAddCallBackListener;
 import gang.com.screencontrol.service.MainService;
@@ -79,6 +88,7 @@ import okhttp3.WebSocket;
  * 图片的Base64编解码  http://blog.csdn.net/lincyang/article/details/46596899
  * Base64解码问题  http://blog.sina.com.cn/s/blog_54410d940101esw5.html
  * TabLayout的使用  ：http://www.jianshu.com/p/2b2bb6be83a8
+ * 处理Fragment+Viewpage一起使用时候获取Fragment对象：http://m.jb51.net/article/102213.htm
  */
 public class MainAct_xiuding extends AppCompatActivity implements MessageCallBackListener, MediaAddCallBackListener, ModelAddCallBackListener {
     @BindView(R.id.lastmodel)
@@ -163,16 +173,22 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
     //用来表示点击的那个层里面具有的特定的元素list，已经被转成String的json
     private String quanju_yuansu_list_json;
     //参数传递时候，与1920和1080形成比例控制pieceXml
-    private int wallheight=0;
-    private int wallwidth=0;
-
+    private int wallheight = 0;
+    private int wallwidth = 0;
+    private int Fragment_Position = 0;
+    //Fragment的声明
+    private  Model_Fragment model_fragment=null;
+    private Grouping_Fragment grouping_fragment=null;
+    private Media_Fragment media_fragment;
+    private Device_Fragment device_fragment;
+    private Message_Fragment message_fragment;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //取消顶部标题
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         //设置全屏
-        getWindow().setFlags(WindowManager.LayoutParams. FLAG_FULLSCREEN , WindowManager.LayoutParams. FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main_act_xiuding);
         ButterKnife.bind(this);
         AppManager.addActivity(this);
@@ -195,6 +211,25 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
         //尽量维持这个值小，特别是有复杂布局的时候，因为如果这个值很大，就会占用很多内存，如果只有3-4page的话，可以全部保持active，可以保持page切换的顺滑
         mViewPagerjingdian.setOffscreenPageLimit(4);
         //预加载问题如何取消
+        //给Viewpage加监听事件
+
+        mViewPagerjingdian.setOnPageChangeListener(new OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                ToastUtil.show(MainAct_xiuding.this, "卧槽选的啥" + position + "");
+                Fragment_Position = position;
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
     }
 
     /**
@@ -694,23 +729,23 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                             //mDragView.setClickable(false);//相当于android:clickable="true"
 
                             int w = ContentXlist.get(i).getRight() - ContentXlist.get(i).getLeft();
-                            float w_float=w;
-                            float hehewallwidth=wallwidth;
-                            float finally_w=w_float*(hehewallwidth/1920);
+                            float w_float = w;
+                            float hehewallwidth = wallwidth;
+                            float finally_w = w_float * (hehewallwidth / 1920);
                             int h = ContentXlist.get(i).getBottom() - ContentXlist.get(i).getTop();
-                            float h_float=h;
-                            float hahawallheight=wallheight;
-                            float finally_h=h_float*(hahawallheight/1080);
+                            float h_float = h;
+                            float hahawallheight = wallheight;
+                            float finally_h = h_float * (hahawallheight / 1080);
                             LayoutParams lp = new LayoutParams((int) finally_w, (int) finally_h);
                             mDragView.setLayoutParams(lp);  //image的布局方式
                             //mDragView.setTag(ContentXlist.get(i).getGuid());
                             mDragView.setTag(ContentXlist.get(i));
                             //设置图片的位置
-                            float m_left=ContentXlist.get(i).getLeft();
-                            float finally_m_left=m_left*(hehewallwidth/1920);
-                            float m_top=ContentXlist.get(i).getTop();
-                            float finally_m_top=m_top*(hahawallheight/1080);
-                            lp.setMargins((int) finally_m_left,(int)finally_m_top,0, 0);
+                            float m_left = ContentXlist.get(i).getLeft();
+                            float finally_m_left = m_left * (hehewallwidth / 1920);
+                            float m_top = ContentXlist.get(i).getTop();
+                            float finally_m_top = m_top * (hahawallheight / 1080);
+                            lp.setMargins((int) finally_m_left, (int) finally_m_top, 0, 0);
                             containViewXiuding.addView(mDragView);
                             //向两个list中添加数据
                             setListener(mDragView, slaveID);
@@ -816,10 +851,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                             lp.setMargins(400, 20, 30, 40);
                             group.addView(imageView);  //添加到布局容器中，显示图片。*/
                         }
-
                     }
-
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -883,20 +915,20 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                         quanju_yuansu_list_json = yuansu_list_json;
                         quan_One_contentbean = contentBeanX;
                         ToastUtil.show(MainAct_xiuding.this, "位置变化" + "顶部" + v.getTop() + "左边" + v.getLeft() + contentBeanX.getGuid());
-                        float left_float=v.getLeft();
-                        float top_float=v.getTop();
+                        float left_float = v.getLeft();
+                        float top_float = v.getTop();
                         //完美需要注意的是这里都不需要乘以以比例*1920/wallwidth，在绘制时候控制好比例就可以了
                         float slaveleft = (left_float / wallwidth);
-                        float slavetop = (top_float / wallheight) ;
-                        float width_float=v.getRight()-v.getLeft();
-                        float height_float=v.getBottom()-v.getTop();
-                        float slavewidth=(width_float/wallwidth);
-                        float slaveheight=(height_float/wallheight);
-                        LogUtil.e("变换的比例","左端的比例"+slaveleft+"顶端的比例"+slavetop);
+                        float slavetop = (top_float / wallheight);
+                        float width_float = v.getRight() - v.getLeft();
+                        float height_float = v.getBottom() - v.getTop();
+                        float slavewidth = (width_float / wallwidth);
+                        float slaveheight = (height_float / wallheight);
+                        LogUtil.e("变换的比例", "左端的比例" + slaveleft + "顶端的比例" + slavetop);
                         String requesturl = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
                                 "\"highlight\": false,\n" +
                                 "\"layerID\": " + contentBeanX.getGuid() + ",\n" +
-                                "\"layerItem\":" + yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\""+slaveleft+"\\\" slavetop=\\\""+slavetop+"\\\" slavewidth=\\\""+slavewidth+"\\\" slaveheight=\\\""+slaveheight+"\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                                "\"layerItem\":" + yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\"" + slaveleft + "\\\" slavetop=\\\"" + slavetop + "\\\" slavewidth=\\\"" + slavewidth + "\\\" slaveheight=\\\"" + slaveheight + "\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
                                 "\"type\": \"Move\",\n" +
                                 "\"zOrder\": " + contentBeanX.getZorder() + "\n" +
                                 "},\n" +
@@ -908,13 +940,12 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
                 }
             }
         });
     }
 
-    @OnClick({R.id.deleteceng, R.id.voice_controller, R.id.lastmodel, R.id.nextmodel, R.id.close_software, R.id.startlock, R.id.clock, R.id.weather, R.id.pause_player, R.id.start_remote_control, R.id.save_ceng, R.id.quanping_ceng, R.id.caifen_controller, R.id.light_controller, R.id.top_ceng, R.id.bottom_ceng})
+    @OnClick({R.id.deleteceng, R.id.voice_controller, R.id.lastmodel, R.id.nextmodel, R.id.close_software, R.id.startlock, R.id.clock, R.id.weather, R.id.pause_player, R.id.start_remote_control, R.id.save_ceng, R.id.quanping_ceng, R.id.caifen_controller, R.id.light_controller, R.id.top_ceng, R.id.bottom_ceng, R.id.refresh_all_bottom})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.lastmodel:
@@ -971,6 +1002,32 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 }
                 break;
             case R.id.close_software:
+
+                List<String> strings = new ArrayList<>();
+                strings.add("1");
+                strings.add("2");
+                strings.add("3");
+                /**
+                 * md风格竖向底部弹出列表 默认可取消可点击
+                 *
+                 * @param context  上下文
+                 * @param title    标题
+                 * @param datas    集合需要BottomSheetBean对象
+                 * @param listener 事件监听
+                 * @return
+                 */
+                /*DialogUIUtils.showMdBottomSheet(MainAct_xiuding.this,  "取消",strings, new DialogUIItemListener() {
+                    @Override
+                    public void onItemClick(CharSequence text, int position) {
+                    }
+
+                    @Override
+                    public void onBottomBtnClick() {
+                    }
+                }).show();*/
+
+
+
                 //关闭软件，关闭所有Activity
                 new AlertDialog(MainAct_xiuding.this).builder().setTitle("退出当前程序")
                         .setMsg("确定退出鼎泓导播吗？")
@@ -1025,24 +1082,53 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 }
                 break;
             case R.id.deleteceng:
-                //删除该层
-                ToastUtil.show(MainAct_xiuding.this, "点击了改层的删除按钮" + quan_One_contentbean.getGuid());
-                String request_delete_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
-                        "\"highlight\": false,\n" +
-                        "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
-                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
-                        "\"type\": \"Delete\",\n" +
-                        "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
-                        "},\n" +
-                        "\"guid\": \"M-45\",\n" +
-                        "\"type\": \"LAYERACTION\"\n" +
-                        "}";
-                webSocket.send(request_delete_ceng);
+                DialogUIUtils.showMdAlert(MainAct_xiuding.this, "删除", "确定删除选中的层吗？", new DialogUIListener() {
+                    @Override
+                    public void onPositive() {
+                        //删除该层
+                        String request_delete_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                                "\"highlight\": false,\n" +
+                                "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
+                                "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                                "\"type\": \"Delete\",\n" +
+                                "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
+                                "},\n" +
+                                "\"guid\": \"M-45\",\n" +
+                                "\"type\": \"LAYERACTION\"\n" +
+                                "}";
+                        webSocket.send(request_delete_ceng);
+                    }
+
+                    @Override
+                    public void onNegative() {
+
+                    }
+                }).show();
                 break;
             case R.id.save_ceng:
                 break;
             case R.id.quanping_ceng:
-                break;
+                DialogUIUtils.showMdAlert(MainAct_xiuding.this, "全屏", "确定全屏显示选中的层吗？", new DialogUIListener() {
+                    @Override
+                    public void onPositive() {
+                        String request_quanping_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                                "\"highlight\": false,\n" +
+                                "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
+                                "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\"" + 0 + "\\\" slavetop=\\\"" + 0 + "\\\" slavewidth=\\\"" + 1 + "\\\" slaveheight=\\\"" + 1 + "\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                                "\"type\": \"Move\",\n" +
+                                "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
+                                "},\n" +
+                                "\"guid\": \"M-45\",\n" +
+                                "\"type\": \"LAYERACTION\"\n" +
+                                "}";
+                        webSocket.send(request_quanping_ceng);
+                    }
+                    @Override
+                    public void onNegative() {
+
+                    }
+                }).show();
+
             case R.id.caifen_controller:
                 break;
             case R.id.light_controller:
@@ -1088,9 +1174,64 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                         "}";
                 webSocket.send(request_bottom_ceng);
                 break;
+            case R.id.refresh_all_bottom:
+                ToastUtil.show(MainAct_xiuding.this, "刷新当前数据");
+                refData();
+                break;
         }
     }
 
+    /**
+     * 调用Fragment的数据刷新
+     */
+    private void refData() {
+      if(Fragment_Position==0) {
+          //这种事根据如果之前设置了tag进行寻找
+          /*Fragment fragment = getSupportFragmentManager().findFragmentByTag("模式");
+          Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.model_fragment);
+          if (fragment != null) {
+              Model_Fragment cartFragment = (Model_Fragment) fragment;
+              cartFragment.refreshData();
+          }*/
+          /**
+           *Viewpager + FragmentPagerAdapter 情况下 获取 当前显示的Fragment,只能找已经加载过的Fragment
+           *注意这种智能针对FragmentPagerAdapter，FragmentStatePagerAdapter不好使
+           */
+          if (model_fragment == null) {
+              Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
+              if (fragment != null) {
+                  model_fragment = (Model_Fragment) fragment;
+                  model_fragment.refreshData();
+              }
+          } else {
+              model_fragment.refreshData();
+          }
+      }
+      else if (Fragment_Position==1)
+      {
+          if (grouping_fragment == null) {
+              Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
+              if (fragment != null) {
+                  grouping_fragment = (Grouping_Fragment) fragment;
+                  grouping_fragment.refreshData();
+              }
+          } else {
+              grouping_fragment.refreshData();
+          }
+      }else if (Fragment_Position==2)
+      {
+          if (media_fragment == null) {
+              Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
+              if (fragment != null) {
+                  media_fragment = (Media_Fragment) fragment;
+                  media_fragment.refreshData();
+              }
+          } else {
+              grouping_fragment.refreshData();
+          }
+      }
+
+}
     /**
      * 监听返回键
      */
@@ -1133,6 +1274,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
         MainService.removeListener(this);
         super.onDestroy();
     }
+
 
 
 }

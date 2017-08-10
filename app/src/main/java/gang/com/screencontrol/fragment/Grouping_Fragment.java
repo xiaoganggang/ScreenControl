@@ -9,6 +9,7 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -47,8 +48,8 @@ public class Grouping_Fragment extends BaseFragment implements MainService.Messa
     /**
      * 是否已被加载过一次，第二次就不再去请求数据了
      */
-    private boolean mHasLoadedOnce;
-
+    private boolean  mHasLoadedOnce;
+    private WebSocket webSocket;
     /**
      * 创建Grouping_Fragment单例模式
      *
@@ -66,24 +67,30 @@ public class Grouping_Fragment extends BaseFragment implements MainService.Messa
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_fragment_group, container, false);
         recyler_group = (RecyclerView) view.findViewById(R.id.recyle_group);
+        initWebsocket();
         isPrepared = true;
         lazyLoad();
-
         return view;
+    }
+
+    /**
+     * 初始化websocket
+     */
+    private void initWebsocket() {
+        //接口回调，调用发送websocket接口
+        webSocket = MainService.getWebSocket();
+        if (null != webSocket) {
+            MainService.addListener(this);
+        }
     }
 
     //网络请求数据
     private void getData() {
-        //接口回调，调用发送websocket接口
-        WebSocket webSocket = MainService.getWebSocket();
-        if (null != webSocket) {
-            MainService.addListener(this);
             webSocket.send("{\n" +
                     "      \"body\" : \"\",\n" +
                     "       \"guid\" : \"M-17\",\n" +
                     "       \"type\" : \"GETGROUPFOLDERLIST\"\n" +
                     "    }");
-        }
     }
 
     private void show_group() {
@@ -132,7 +139,28 @@ public class Grouping_Fragment extends BaseFragment implements MainService.Messa
         });
 
     }
+    /**
+     * 在主Activity中点击刷新按钮时候调用的方法
+     */
+    public void refreshData()
+    {
+        LogUtil.e("调用刷新数据","啦啦啦分组数据");
+        if (groupAdapter!=null)
+        {
+            groupAdapter.clearData();
+            //重新发送请求获取数据
+            webSocket.send("{\n" +
+                    "      \"body\" : \"\",\n" +
+                    "       \"guid\" : \"M-17\",\n" +
+                    "       \"type\" : \"GETGROUPFOLDERLIST\"\n" +
+                    "    }");
+        }
+        else
+        {
+            LogUtil.e("调用刷新数据","请求数据失败，groupAdapter为空");
+        }
 
+    }
     /**
      * 预加载处理
      */

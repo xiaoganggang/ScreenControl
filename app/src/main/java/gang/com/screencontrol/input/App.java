@@ -5,6 +5,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 
+import com.dou361.dialogui.DialogUIUtils;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.facebook.imagepipeline.decoder.SimpleProgressiveJpegConfig;
@@ -30,6 +31,7 @@ public class App extends Application {
                 .setProgressiveJpegConfig(new SimpleProgressiveJpegConfig())
                 .build();
         Fresco.initialize(this);
+        DialogUIUtils.init(applicationContext);
         Intent i = new Intent(this, MainService.class);
         this.startService(i);
     }
