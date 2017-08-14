@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+              android:background="@drawable/yuanjiao"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+
+        android:gravity="center_horizontal"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="32dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:gravity="center"
+            android:textColor="#00acff"
+            android:text="保存模式"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="10dp"
+            android:background="#00acff" />
+
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="名字:"
+                android:textColor="#00acff"
+                android:textSize="18dp" />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:layout_marginRight="20dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="8dp"
+                android:background="@null"
+                android:gravity="center"
+                android:hint="输入新模式的名字"
+                android:textSize="18dp" />
+
+
+
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="描述:"
+                android:textColor="#00acff"
+                android:textSize="18dp" />
+            <EditText
+                android:layout_marginRight="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:background="@null"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:hint="输入新模式的描述"
+                android:textSize="18dp" />
+
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:background="#00acff"
+        android:layout_marginTop="15dp"
+        android:layout_height="1dp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
+            <Button
+                android:layout_marginRight="10dp"
+                android:layout_width="100dp"
+                android:layout_height="32dp"
+                android:background="@null"
+                android:gravity="center"
+                android:text="取消"
+                android:textSize="20dp"
+                android:textColor="#00acff"/>
+        </LinearLayout>
+        <TextView
+            android:layout_width="1dp"
+            android:background="#00acff"
+            android:layout_height="match_parent"/>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
+            <Button
+                android:layout_marginRight="10dp"
+                android:layout_width="100dp"
+                android:layout_height="32dp"
+                android:background="@null"
+                android:gravity="center"
+                android:text="保存"
+                android:textSize="20dp"
+                android:textColor="#00acff"/>
+        </LinearLayout>
+    </LinearLayout>
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="#00acff" />
+</LinearLayout>
