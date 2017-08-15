@@ -127,10 +127,12 @@ public class MainService extends Service {
         X509TrustManager xtm = new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) {
+
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType) {
+
             }
 
             @Override
@@ -167,7 +169,7 @@ public class MainService extends Service {
                 .build();
 
         //Request request = new Request.Builder().url("wss://" + adress + ":" + port).build();
-        Request request = new Request.Builder().url("wss://192.168.10.168:7681").build();
+        Request request = new Request.Builder().url("wss://192.168.12.4:7681").build();
         //建立连接
         mOkHttpClient.newWebSocket(request, new WebSocketListener() {
             @Override

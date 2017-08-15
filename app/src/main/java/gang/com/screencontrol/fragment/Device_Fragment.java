@@ -22,7 +22,9 @@ import java.util.List;
 import gang.com.screencontrol.R;
 import gang.com.screencontrol.adapter.BaseAdapter;
 import gang.com.screencontrol.adapter.DeviceAdapter;
-import gang.com.screencontrol.bean.DeviceBean;
+import gang.com.screencontrol.bean.Devicebean_child;
+import gang.com.screencontrol.bean.Devicebean_child.BodyBean;
+import gang.com.screencontrol.bean.Devicebean_childfolder;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
 import gang.com.screencontrol.potting.BaseFragment;
 import gang.com.screencontrol.service.MainService;
@@ -37,9 +39,11 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
     public static Device_Fragment instance = null;
     private RecyclerView recycler_device;
     private DeviceAdapter deviceadapter;
-    private List<DeviceBean> data = new ArrayList<>();
+    private List<Devicebean_childfolder.BodyBean.DeviceFolderInfoBean> devicebean_childfolders=new ArrayList<>();
+    private List<Devicebean_child.BodyBean.InfoListBean> devicebean_child=new ArrayList<>();
     private Gson gson = new Gson();
     private WebSocket webSocket;
+    private static DeviceAddCallBackListener mydeviceaddListener1;
     public static Device_Fragment getInstance() {
         if (instance == null) {
             instance = new Device_Fragment();
@@ -58,17 +62,23 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_fragment_device, container, false);
+        initWebsocket();
         recycler_device = (RecyclerView) view.findViewById(R.id.recyle_device);
         isPrepared=true;
         lazyLoad();
         return view;
     }
-
-    private void getData() {
+    /**
+     * 初始化websocket
+     */
+    private void initWebsocket() {
         //接口回调，调用发送websocket接口
-         webSocket = MainService.getWebSocket();
+        webSocket = MainService.getWebSocket();
         if (null != webSocket) {
             MainService.addListener(this);
+        }
+    }
+    private void getData() {
             webSocket.send("    {\n" +
                     "       \"body\" : {\n" +
                     "          \"typeid\" : [ 0 ]\n" +
@@ -76,11 +86,10 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
                     "       \"guid\" : \"M-117\",\n" +
                     "       \"type\" : \"GETDEVICETYPEFOLDERLIST\"\n" +
                     "    }");
-        }
     }
 
     private void showView() {
-        deviceadapter = new DeviceAdapter(getActivity(), data);
+        deviceadapter = new DeviceAdapter(getActivity(), devicebean_child);
         recycler_device.setAdapter(deviceadapter);
         recycler_device.setLayoutManager(new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.HORIZONTAL));
         recycler_device.setItemAnimator(new DefaultItemAnimator());
@@ -88,7 +97,10 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
         deviceadapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener() {
             @Override
             public void onClick(View v, int position) {
-
+                if (null != mydeviceaddListener1) {
+                    //将点击事件传递给回调函数
+                    mydeviceaddListener1.OnAddDeviceView(devicebean_child.get(position));
+                }
             }
         });
     }
@@ -104,11 +116,30 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
                     if (allmodelobject.getString("type").equals("GETDEVICETYPEFOLDERLIST")) {
                         String bodystring = allmodelobject.getString("body");
                         JSONObject basicInfoboj = new JSONObject(bodystring);
-                        basicInfoboj.getString("deviceFolderInfo");
-                        LogUtil.d("获取的所有设备list", basicInfoboj.getString("deviceFolderInfo"));
-                      List<DeviceBean> ps = gson.fromJson(basicInfoboj.getString("deviceFolderInfo"), new TypeToken<List<DeviceBean>>() {
+                        devicebean_childfolders = gson.fromJson(basicInfoboj.getString("deviceFolderInfo"), new TypeToken<List<Devicebean_childfolder.BodyBean.DeviceFolderInfoBean>>() {
                         }.getType());
-                        data = ps;
+                        basicInfoboj.getString("deviceFolderInfo");
+                        for (int i = 0; i < devicebean_childfolders.size(); i++) {
+                            if (devicebean_childfolders.get(i).getFolderID()!=8)
+                            {
+                                webSocket.send("    {\n" +
+                                        "       \"body\" : {\n" +
+                                        "          \"id\" : "+devicebean_childfolders.get(i).getFolderID()+",\n" +
+                                        "          \"keyword\" : \"\"\n" +
+                                        "       },\n" +
+                                        "       \"guid\" : \"M-134\",\n" +
+                                        "       \"type\" : \"GETDEVICELIST\"\n" +
+                                        "    }");
+                            }
+                        }
+
+                    }
+                    else if (allmodelobject.getString("type").equals("GETDEVICELIST"))
+                    {
+                        String bodystring = allmodelobject.getString("body");
+                        JSONObject basicInfoboj = new JSONObject(bodystring);
+                        devicebean_child = gson.fromJson(basicInfoboj.getString("infoList"), new TypeToken<List<Devicebean_child.BodyBean.InfoListBean>>() {
+                        }.getType());
                         mHasLoadedOnce=true;
                         showView();
                     }
@@ -118,6 +149,18 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
             }
         });
 
+    }
+/**
+ * 点击接口的回调
+ */
+public interface DeviceAddCallBackListener {
+    void OnAddDeviceView(Devicebean_child.BodyBean.InfoListBean deviceBean_info);
+}
+    /**
+     * 用于注册回调事件
+     */
+    public static void SetMediaAddListener(DeviceAddCallBackListener mydeviceaddListener) {
+        mydeviceaddListener1 = mydeviceaddListener;
     }
 
     /**

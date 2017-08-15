@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,7 +72,6 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
         //请求所有文件中的子文件
         isPrepared=true;
         lazyLoad();
-
         return view;
     }
     /**
@@ -163,7 +163,6 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
                             LogUtil.d("获取的所有媒体list子文件夹List信息", mdata_child.get(i).getFileId() + "呵呵呵222");
                         }
                     } else if (allmodelobject.getString("type").equals("GETMEDIAFILEINFO")) {
-                        LogUtil.d("获取的所有媒体list子文件夹的单个详细信息", text + "呵呵呵");
                         String bodystring = allmodelobject.getString("body");
                         MediaBean_childdetial.BodyBean msg = gson.fromJson(bodystring, MediaBean_childdetial.BodyBean.class);
                         mdata_child_detial.add(msg);
@@ -222,7 +221,7 @@ public class Media_Fragment extends BaseFragment implements MainService.MessageC
      * 定义一个接口
      * 方法参数是传递点击item的详细数据
      *
-     * @author fox
+     * @author xiaogangzai
      */
     public interface MediaAddCallBackListener {
         void OnAddMediaView(MediaBean_childdetial.BodyBean mediaBean_childdetial);

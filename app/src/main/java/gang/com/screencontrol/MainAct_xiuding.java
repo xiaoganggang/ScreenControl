@@ -1,6 +1,11 @@
 package gang.com.screencontrol;
 
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -61,6 +66,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import gang.com.screencontrol.adapter.ViewPagerAdapter;
 import gang.com.screencontrol.bean.CengYuansuBean;
+import gang.com.screencontrol.bean.Devicebean_child.BodyBean.InfoListBean;
 import gang.com.screencontrol.bean.LoadVideoWallInfo_Bean.BodyBean.SlaveInfoBean.MonitorInfoBean;
 import gang.com.screencontrol.bean.MediaBean_childdetial.BodyBean;
 import gang.com.screencontrol.bean.MobelBean.BasicInfoBean;
@@ -69,6 +75,7 @@ import gang.com.screencontrol.bean.ScreenContent.BodyBean.ContentBeanX.ContentBe
 import gang.com.screencontrol.defineview.AlertDialog;
 import gang.com.screencontrol.defineview.DragScaleView;
 import gang.com.screencontrol.fragment.Device_Fragment;
+import gang.com.screencontrol.fragment.Device_Fragment.DeviceAddCallBackListener;
 import gang.com.screencontrol.fragment.Grouping_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment;
 import gang.com.screencontrol.fragment.Media_Fragment.MediaAddCallBackListener;
@@ -90,7 +97,7 @@ import okhttp3.WebSocket;
  * TabLayout的使用  ：http://www.jianshu.com/p/2b2bb6be83a8
  * 处理Fragment+Viewpage一起使用时候获取Fragment对象：http://m.jb51.net/article/102213.htm
  */
-public class MainAct_xiuding extends AppCompatActivity implements MessageCallBackListener, MediaAddCallBackListener, ModelAddCallBackListener {
+public class MainAct_xiuding extends AppCompatActivity implements MessageCallBackListener, MediaAddCallBackListener, ModelAddCallBackListener ,DeviceAddCallBackListener{
     @BindView(R.id.lastmodel)
     ImageView lastmodel;
     @BindView(R.id.nextmodel)
@@ -177,13 +184,20 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
     private int wallwidth = 0;
     private int Fragment_Position = 0;
     //Fragment的声明
-    private  Model_Fragment model_fragment=null;
-    private Grouping_Fragment grouping_fragment=null;
+    private Model_Fragment model_fragment = null;
+    private Grouping_Fragment grouping_fragment = null;
     private Media_Fragment media_fragment;
     private Device_Fragment device_fragment;
     private Message_Fragment message_fragment;
     //用来存layerid的list，比较新加入的层id与之前是否相同，相同就是替换
-    private List<String> layerid_list=new ArrayList<>();
+    private List<String> layerid_list = new ArrayList<>();
+    //每次添加层。模式。或者场景的时候都需要获取一个不唯一的id
+    private int unlayerid = 0;
+    private static final int NOTIFICATION_FLAG = 1;
+    //用于存放每个层的zoder，用于置顶排序用
+    private List<Integer> layer_zoderlist = new ArrayList<>();
+    //用于存放点击的媒体的信息
+    private BodyBean media_bodyBean;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -439,7 +453,6 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
     }
 
 
-
     /**
      * 显示dialog是否播放模式
      *
@@ -614,66 +627,21 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
     @Override
     public void OnAddMediaView(BodyBean mediaBean_childdetial) {
         //同时在这里执行view添加到StickView的操作
-        if (mediaBean_childdetial.getFolderId() == 11) {
-            Media_Addceng(mediaBean_childdetial);
-        } else if (mediaBean_childdetial.getFolderId() == 12) {
-            Media_Addceng(mediaBean_childdetial);
-        }
+        media_bodyBean=mediaBean_childdetial;
+        Media_Addceng();
     }
+
     /**
      * 媒体模块向屏幕中添加层，需要判断一下当前内容中是否有这个层
-     * @param mediaBean_childdetial
+     *
      */
-    private void Media_Addceng(BodyBean mediaBean_childdetial) {
-        if (layerid_list.contains(mediaBean_childdetial.getFileId()))
-        {
-            DialogUIUtils.showToastCenter("确定替换层吗");
-        }
-        else
-        {
-            DragScaleView mDragView = new DragScaleView(MainAct_xiuding.this);  //创建imageview
-            mDragView.isFocused();
-            //mDragView.setBackgroundResource(R.mipmap.video);
-            mDragView.setClickable(true);//相当于android:clickable="true"
-            LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            mDragView.setLayoutParams(lp);  //image的布局方式
-            //设置图片的位置
-            lp.setMargins(10, 10, 10, 10);
-            containViewXiuding.addView(mDragView);
-            //向两个list中添加数据
-            dragScaleViewList.add(mDragView);
-            webSocket.send("    {\n" +
-                    "       \"body\" : {\n" +
-                    "          \"alpha\" : 1.0,\n" +
-                    "          \"highlight\" : false,\n" +
-                    "          \"layerID\" : "+mediaBean_childdetial.getFolderId()+",\n" +
-                    "          \"layerItem\" : [\n" +
-                    "             {\n" +
-                    "                \"ID\" : "+mediaBean_childdetial.getFolderId()+",\n" +
-                    "                \"description\" :"+mediaBean_childdetial.getDescription()+" \"\",\n" +
-                    "                \"majorID\" : -1,\n" +
-                    "                \"minorID\" : 176,\n" +
-                    "                \"name\" : \""+mediaBean_childdetial.getFileName()+"\",\n" +
-                    "                \"playOrder\" : 0,\n" +
-                    "                \"playTime\" : 30,\n" +
-                    "                \"refreshTime\" : 1719895702,\n" +
-                    "                \"type\" : "+mediaBean_childdetial.getType()+",\n" +
-                    "                \"validSource\" : 1\n" +
-                    "             }\n" +
-                    "          ],\n" +
-                    "          \"pieceXml\" : \"\n" +
-                    "              <Layer>\\n    \n" +
-                    "                <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n\n" +
-                    "            </Layer>\\n\",\n" +
-                    "          \"type\" : \"Add\",\n" +
-                    "          \"zOrder\" : 12\n" +
-                    "       },\n" +
-                    "       \"guid\" : \"M-45\",\n" +
-                    "       \"type\" : \"LAYERACTION\"\n" +
-                    "    }");
-        }
-
-
+    private void Media_Addceng() {
+        //发送获取一个唯一的id
+        webSocket.send("    {\n" +
+                "       \"body\" : \"\",\n" +
+                "       \"guid\" : \"M-80\",\n" +
+                "       \"type\" : \"GETUNIQUEID\"\n" +
+                "    }");
 
     }
 
@@ -753,6 +721,8 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                             dragScaleViewList.clear();
                             guidlist.clear();
                             containViewXiuding.removeAllViews();
+                            //获取到新的变化以后把layer_zoderlist清空
+                            layer_zoderlist.clear();
                         }
                         String bodystring = allmodelobject.getString("body");
                         JSONObject contentoboj = new JSONObject(bodystring);
@@ -785,6 +755,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                             float m_top = ContentXlist.get(i).getTop();
                             float finally_m_top = m_top * (hahawallheight / 1080);
                             lp.setMargins((int) finally_m_left, (int) finally_m_top, 0, 0);
+                            layer_zoderlist.add(ContentXlist.get(i).getZorder());
                             layerid_list.add(ContentXlist.get(i).getGuid());
                             containViewXiuding.addView(mDragView);
                             //向两个list中添加数据
@@ -815,6 +786,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                             for (int i = 0; i < ContentXlist.size(); i++) {
                                 if (snapshotoboj.getInt("slaveID") == slaveID && snapshotoboj.getString("layerID").equals(ContentXlist.get(i).getGuid())) {
                                     String imageDataStr1 = snapshotoboj.getString("imageDataStr");
+                                    LogUtil.e("哎这个图片", imageDataStr1);
                                     //替换掉\r\n
                                     imageDataStr1 = imageDataStr1.replaceAll("\r\n", "");
                                     if (!TextUtils.isEmpty(imageDataStr1) && list_returnpc.size() != 0) {
@@ -890,6 +862,68 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                             //设置图片的位置
                             lp.setMargins(400, 20, 30, 40);
                             group.addView(imageView);  //添加到布局容器中，显示图片。*/
+                        }
+                    }
+                    //发送获取一个唯一的layerid的请求
+                    else if (allmodelobject.getString("type").equals("GETUNIQUEID")) {
+                        String bodystring = allmodelobject.getString("body");
+                        JSONObject GETUNIQUEIDobject = new JSONObject(bodystring);
+                        unlayerid = GETUNIQUEIDobject.getInt("id");
+                        LogUtil.e("不唯一ID", unlayerid + "");
+                        //防止空指针判断取到那个id没有
+                        if (unlayerid != 0) {
+                            if (layerid_list.contains(media_bodyBean.getFileId())) {
+                                DialogUIUtils.showToastCenter("确定替换层吗");
+                            } else {
+                                DragScaleView mDragView = new DragScaleView(MainAct_xiuding.this);  //创建imageview
+                                mDragView.isFocused();
+                                //mDragView.setBackgroundResource(R.mipmap.video);
+                                mDragView.setClickable(true);//相当于android:clickable="true"
+                                LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                                mDragView.setLayoutParams(lp);  //image的布局方式
+                                //设置图片的位置
+                                lp.setMargins(10, 10, 10, 10);
+                                containViewXiuding.addView(mDragView);
+                                //向两个list中添加数据
+                                dragScaleViewList.add(mDragView);
+                                webSocket.send("    {\n" +
+                                        "       \"body\" : {\n" +
+                                        "          \"alpha\" : 1.0,\n" +
+                                        "          \"highlight\" : false,\n" +
+                                        "          \"layerID\" : " + unlayerid + ",\n" +
+                                        "          \"layerItem\" : [\n" +
+                                        "             {\n" +
+                                        "                \"ID\" : " + unlayerid + ",\n" +
+                                        "                \"description\" :" + media_bodyBean.getDescription() + " \"\",\n" +
+                                        "                \"majorID\" : -1,\n" +
+                                        "                \"minorID\" : 176,\n" +
+                                        "                \"name\" : \"" + media_bodyBean.getFileName() + "\",\n" +
+                                        "                \"playOrder\" : 0,\n" +
+                                        "                \"playTime\" : 30,\n" +
+                                        "                \"refreshTime\" : 1719895702,\n" +
+                                        "                \"type\" : " + media_bodyBean.getType() + ",\n" +
+                                        "                \"validSource\" : 1\n" +
+                                        "             }\n" +
+                                        "          ],\n" +
+                                        "          \"pieceXml\" : \"\n" +
+                                        "              <Layer>\\n    \n" +
+                                        "                <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\"0\\\" slavetop=\\\"0\\\" slavewidth=\\\"1\\\" slaveheight=\\\"1\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n\n" +
+                                        "            </Layer>\\n\",\n" +
+                                        "          \"type\" : \"Add\",\n" +
+                                        "          \"zOrder\" : 12\n" +
+                                        "       },\n" +
+                                        "       \"guid\" : \"M-45\",\n" +
+                                        "       \"type\" : \"LAYERACTION\"\n" +
+                                        "    }");
+                            }
+                        }
+                    }
+                    //判断控制器是否断开连接
+                    else if (allmodelobject.getString("type").equals("SLAVECONNECTED")) {
+                        String bodystring = allmodelobject.getString("body");
+                        JSONObject SLAVECONNECTED = new JSONObject(bodystring);
+                        if (SLAVECONNECTED.getInt("slaveStatus") == 0) {
+                            Notifi_Controller();
                         }
                     }
                 } catch (JSONException e) {
@@ -1140,58 +1174,50 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                                 "}";
                         webSocket.send(request_quanping_ceng);
                     }
+
                     @Override
                     public void onNegative() {
 
                     }
                 }).show();
-                 /**
-                  * 分屏，四分屏，点击之后现在屏幕上，每次先确定几个数据，超过四个就不能进行分屏
-                  * 因为是拆分，所有宽高都是一样的，都是屏幕的一半
-                  */
+                /**
+                 * 分屏，四分屏，点击之后现在屏幕上，每次先确定几个数据，超过四个就不能进行分屏
+                 * 因为是拆分，所有宽高都是一样的，都是屏幕的一半
+                 */
             case R.id.caifen_controller:
-                 if(ContentXlist.size()>4)
-                 {
-                     DialogUIUtils.showToast("由于层数过多不可四分屏");
-                 }
-                 else if (ContentXlist.size()==1)
-                 {
-                     //一个元素
-                     //手机屏幕View添加
-                     Phone_Caifen_View(0,0);
-                     //拆分屏幕View的变换
-                     Wall_Caifen_Move(ContentXlist.get(0), 0, 0);
-                 }
-                 else if (ContentXlist.size()==2)
-                 {
-                     //两个元素
-                     Phone_Caifen_View(0,0);
-                     Phone_Caifen_View(0,wallwidth/2);
-                     Wall_Caifen_Move(ContentXlist.get(0), 0, 0);
-                     Wall_Caifen_Move(ContentXlist.get(1), 0.5f, 0);
-                 }
-                 else if(ContentXlist.size()==3)
-                 {
-                     //三个元素
-                     Phone_Caifen_View(0,0);
-                     Phone_Caifen_View(0,wallwidth/2);
-                     Phone_Caifen_View(wallheight/2,0);
-                     Wall_Caifen_Move(ContentXlist.get(0), 0, 0);
-                     Wall_Caifen_Move(ContentXlist.get(1), 0.5f, 0);
-                     Wall_Caifen_Move(ContentXlist.get(2), 0.5f, 0);
-                 }
-                 else if(ContentXlist.size()==4)
-                 {
-                     //四个元素
-                     Phone_Caifen_View(0,0);
-                     Phone_Caifen_View(0,wallwidth/2);
-                     Phone_Caifen_View(wallheight/2,0);
-                     Phone_Caifen_View(wallheight/2,wallwidth/2);
-                     Wall_Caifen_Move(ContentXlist.get(0), 0, 0);
-                     Wall_Caifen_Move(ContentXlist.get(1), 0.5f, 0);
-                     Wall_Caifen_Move(ContentXlist.get(2), 0, 0.5f);
-                     Wall_Caifen_Move(ContentXlist.get(3), 0.5f, 0.5f);
-                 }
+                if (ContentXlist.size() > 4) {
+                    DialogUIUtils.showToast("由于层数过多不可四分屏");
+                } else if (ContentXlist.size() == 1) {
+                    //一个元素
+                    //手机屏幕View添加
+                    Phone_Caifen_View(0, 0);
+                    //拆分屏幕View的变换
+                    Wall_Caifen_Move(ContentXlist.get(0), 0, 0);
+                } else if (ContentXlist.size() == 2) {
+                    //两个元素
+                    Phone_Caifen_View(0, 0);
+                    Phone_Caifen_View(0, wallwidth / 2);
+                    Wall_Caifen_Move(ContentXlist.get(0), 0, 0);
+                    Wall_Caifen_Move(ContentXlist.get(1), 0.5f, 0);
+                } else if (ContentXlist.size() == 3) {
+                    //三个元素
+                    Phone_Caifen_View(0, 0);
+                    Phone_Caifen_View(0, wallwidth / 2);
+                    Phone_Caifen_View(wallheight / 2, 0);
+                    Wall_Caifen_Move(ContentXlist.get(0), 0, 0);
+                    Wall_Caifen_Move(ContentXlist.get(1), 0.5f, 0);
+                    Wall_Caifen_Move(ContentXlist.get(2), 0, 0.5f);
+                } else if (ContentXlist.size() == 4) {
+                    //四个元素
+                    Phone_Caifen_View(0, 0);
+                    Phone_Caifen_View(0, wallwidth / 2);
+                    Phone_Caifen_View(wallheight / 2, 0);
+                    Phone_Caifen_View(wallheight / 2, wallwidth / 2);
+                    Wall_Caifen_Move(ContentXlist.get(0), 0, 0);
+                    Wall_Caifen_Move(ContentXlist.get(1), 0.5f, 0);
+                    Wall_Caifen_Move(ContentXlist.get(2), 0, 0.5f);
+                    Wall_Caifen_Move(ContentXlist.get(3), 0.5f, 0.5f);
+                }
                 break;
             case R.id.light_controller:
                 //调高亮度该层
@@ -1199,7 +1225,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 String request_light_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
                         "\"highlight\": true,\n" +
                         "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
-                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
                         "\"type\": \"Highlight\",\n" +
                         "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
                         "},\n" +
@@ -1213,9 +1239,8 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 String request_top_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
                         "\"highlight\": false,\n" +
                         "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
-                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
                         "\"type\": \"ZOrder\",\n" +
-                        "\"zOrder\": " + 1500 + "\n" +
+                        "\"zOrder\": " + get_Max_zoder() + "\n" +
                         "},\n" +
                         "\"guid\": \"M-45\",\n" +
                         "\"type\": \"LAYERACTION\"\n" +
@@ -1224,16 +1249,21 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 break;
             case R.id.bottom_ceng:
                 ToastUtil.show(MainAct_xiuding.this, "调高该层位于底部");
-                String request_bottom_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
-                        "\"highlight\": false,\n" +
-                        "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
-                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
-                        "\"type\": \"ZOrder\",\n" +
-                        "\"zOrder\": " + 1 + "\n" +
-                        "},\n" +
-                        "\"guid\": \"M-45\",\n" +
-                        "\"type\": \"LAYERACTION\"\n" +
-                        "}";
+                String request_bottom_ceng = "\n" +
+                        "       \"body\" : {\n" +
+                        "          \"layerAction\" : [\n" +
+                        "             {\n" +
+                        "                \"layerID\" : " + quan_One_contentbean.getGuid() + ",\n" +
+                        "                \"type\" : \"ZOrder\",\n" +
+                        "                \"zOrder\" : 0\n" +
+                        "             }\n" +
+                        "          ],\n" +
+                        "          \"type\" : \"ZOrder\"\n" +
+                        "       },\n" +
+                        "       \"guid\" : \"M-54\",\n" +
+                        "       \"type\" : \"LAYERLISTACTION\"\n" +
+                        "    }";
+                LogUtil.d("层置底", request_bottom_ceng);
                 webSocket.send(request_bottom_ceng);
                 break;
             case R.id.refresh_all_bottom:
@@ -1242,39 +1272,52 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 break;
         }
     }
-
+/**
+ * 置顶用到的方法，获取到最大的zoder
+ */
+private int get_Max_zoder()
+{
+    int max_zoder=layer_zoderlist.get(0);
+    for(int i=0;i<layer_zoderlist.size();i++){
+        if(layer_zoderlist.get(i)>max_zoder){
+            max_zoder=layer_zoderlist.get(i);
+        }
+    }
+    return max_zoder;
+}
     /**
-     *四分屏：针对手机屏幕中的内容发送View的变换
+     * 四分屏：针对手机屏幕中的内容发送View的变换
+     *
      * @param view_top
      * @param view_left
      */
-    private void Phone_Caifen_View(int view_top,int view_left)
-    {
+    private void Phone_Caifen_View(int view_top, int view_left) {
         DragScaleView mDragView = new DragScaleView(MainAct_xiuding.this);  //创建imageview
         mDragView.isFocused();
         //mDragView1.setBackgroundResource(R.mipmap.ic_launcher);
         mDragView.setClickable(false);//相当于android:clickable="true"
         //设置图片大小
-        LayoutParams lp = new LayoutParams(wallwidth/2, wallheight/2);
+        LayoutParams lp = new LayoutParams(wallwidth / 2, wallheight / 2);
         mDragView.setLayoutParams(lp);  //image的布局方式
         //mDragView.setTag(ContentXlist.get(i).getGuid());
         //mDragView.setTag(ContentXlist.get(0));
         //设置图片的位置
-        lp.setMargins(view_left,view_top, 0, 0);
+        lp.setMargins(view_left, view_top, 0, 0);
         containViewXiuding.addView(mDragView);
         //向两个list中添加数据
         //setListener(mDragView, slaveID);
         dragScaleViewList.add(mDragView);
         //guidlist.add(ContentXlist.get(0).getGuid());
     }
+
     /**
      * 四分屏：针对四分屏进行发送移动的层请求的方法,操作显示墙里面的内容
+     *
      * @param contentBeanXo
      * @param wall_slave_left
      * @param wall_slave_top
      */
-    private void Wall_Caifen_Move(ContentBeanX contentBeanXo,float wall_slave_left,float wall_slave_top)
-    {
+    private void Wall_Caifen_Move(ContentBeanX contentBeanXo, float wall_slave_left, float wall_slave_top) {
         //讲bean转成json，取到其中的元素数组
         // ScreenContent.BodyBean.ContentBeanX.ContentBean contentBean=new ScreenContent.BodyBean.ContentBeanX.ContentBean();
         try {
@@ -1324,57 +1367,56 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
             e.printStackTrace();
         }
     }
+
     /**
      * 调用Fragment的数据刷新
      */
     private void refData() {
-      if(Fragment_Position==0) {
-          //这种事根据如果之前设置了tag进行寻找
+        if (Fragment_Position == 0) {
+            //这种事根据如果之前设置了tag进行寻找
           /*Fragment fragment = getSupportFragmentManager().findFragmentByTag("模式");
           Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.model_fragment);
           if (fragment != null) {
               Model_Fragment cartFragment = (Model_Fragment) fragment;
               cartFragment.refreshData();
           }*/
-          /**
-           *Viewpager + FragmentPagerAdapter 情况下 获取 当前显示的Fragment,只能找已经加载过的Fragment
-           *注意这种智能针对FragmentPagerAdapter，FragmentStatePagerAdapter不好使
-           */
-          if (model_fragment == null) {
-              Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
-              if (fragment != null) {
-                  model_fragment = (Model_Fragment) fragment;
-                  model_fragment.refreshData();
-              }
-          } else {
-              model_fragment.refreshData();
-          }
-      }
-      else if (Fragment_Position==1)
-      {
-          if (grouping_fragment == null) {
-              Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
-              if (fragment != null) {
-                  grouping_fragment = (Grouping_Fragment) fragment;
-                  grouping_fragment.refreshData();
-              }
-          } else {
-              grouping_fragment.refreshData();
-          }
-      }else if (Fragment_Position==2)
-      {
-          if (media_fragment == null) {
-              Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
-              if (fragment != null) {
-                  media_fragment = (Media_Fragment) fragment;
-                  media_fragment.refreshData();
-              }
-          } else {
-              grouping_fragment.refreshData();
-          }
-      }
+            /**
+             *Viewpager + FragmentPagerAdapter 情况下 获取 当前显示的Fragment,只能找已经加载过的Fragment
+             *注意这种智能针对FragmentPagerAdapter，FragmentStatePagerAdapter不好使
+             */
+            if (model_fragment == null) {
+                Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
+                if (fragment != null) {
+                    model_fragment = (Model_Fragment) fragment;
+                    model_fragment.refreshData();
+                }
+            } else {
+                model_fragment.refreshData();
+            }
+        } else if (Fragment_Position == 1) {
+            if (grouping_fragment == null) {
+                Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
+                if (fragment != null) {
+                    grouping_fragment = (Grouping_Fragment) fragment;
+                    grouping_fragment.refreshData();
+                }
+            } else {
+                grouping_fragment.refreshData();
+            }
+        } else if (Fragment_Position == 2) {
+            if (media_fragment == null) {
+                Fragment fragment = getSupportFragmentManager().findFragmentByTag("android:switcher:" + mViewPagerjingdian.getId() + ":" + Fragment_Position);
+                if (fragment != null) {
+                    media_fragment = (Media_Fragment) fragment;
+                    media_fragment.refreshData();
+                }
+            } else {
+                grouping_fragment.refreshData();
+            }
+        }
 
-}
+    }
+
     /**
      * 监听返回键
      */
@@ -1401,28 +1443,49 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
         }
         return false;
     }
- /**
-  *保存模式dialog的弹出方法
-  */
-private void showSaveDialog()
-{
-    final Dialog dialog = new Dialog(this, R.style.dialog);
-    dialog.setContentView(R.layout.dialog_saveprogram);
-    Window dialogWindow = dialog.getWindow();
-    WindowManager.LayoutParams lp = dialogWindow.getAttributes();
-    dialogWindow.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
-    lp.x = 0;
-    lp.y = 0;
-    DisplayMetrics dm = new DisplayMetrics();
-    getWindowManager().getDefaultDisplay().getMetrics(dm);
-    int width1 = dm.widthPixels;
-    int height1 = dm.heightPixels;
-    lp.width = (int) (0.65 * width1);
-    lp.height = (int) (0.3 * height1);
-    lp.alpha = 1.0f;
-    dialogWindow.setAttributes(lp);
-    dialog.show();
-}
+
+    /**
+     * 保存模式dialog的弹出方法
+     */
+    private void showSaveDialog() {
+        final Dialog dialog = new Dialog(this, R.style.dialog);
+        dialog.setContentView(R.layout.dialog_saveprogram);
+        Window dialogWindow = dialog.getWindow();
+        WindowManager.LayoutParams lp = dialogWindow.getAttributes();
+        dialogWindow.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        lp.x = 0;
+        lp.y = 0;
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int width1 = dm.widthPixels;
+        int height1 = dm.heightPixels;
+        lp.width = (int) (0.65 * width1);
+        lp.height = (int) (0.3 * height1);
+        lp.alpha = 1.0f;
+        dialogWindow.setAttributes(lp);
+        dialog.show();
+    }
+
+    /**
+     * 控制器断开的Notification
+     */
+    private void Notifi_Controller() {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        PendingIntent pendingIntent3 = PendingIntent.getActivity(this, 0,
+                new Intent(this, MainActivity.class), 0);
+        // 通过Notification.Builder来创建通知，注意API Level
+        // API16之后才支持
+        Notification notify3 = new Notification.Builder(this)
+                .setSmallIcon(R.mipmap.starticon184)
+                .setTicker("东方鼎泓:" + "您有新短消息，请注意查收！")
+                .setContentTitle("鼎泓导播")
+                .setContentText("Controller断开，请在电脑端查看")
+                .setContentIntent(pendingIntent3).setNumber(1).build(); // 需要注意build()是在API
+        // level16及之后增加的，API11可以使用getNotificatin()来替代
+        notify3.flags |= Notification.FLAG_AUTO_CANCEL; // FLAG_AUTO_CANCEL表明当通知被用户点击时，通知将被清除。
+        manager.notify(NOTIFICATION_FLAG, notify3);// 步骤4：通过通知管理器来发起通知。如果id不同，则每click，在status哪里增加一个提示
+    }
+
     /**
      * 初始化监听事件的注册
      */
@@ -1440,6 +1503,9 @@ private void showSaveDialog()
     }
 
 
+    @Override
+    public void OnAddDeviceView(InfoListBean deviceBean_info) {
 
+    }
 }
 

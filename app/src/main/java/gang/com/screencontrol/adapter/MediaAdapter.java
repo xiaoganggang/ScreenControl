@@ -45,7 +45,7 @@ public class MediaAdapter extends BaseSimpleAdapter<MediaBean_childdetial.BodyBe
             try {
                 JSONObject pixObject=new JSONObject(JsonUitl.toJson(mediaBean.getThumbnailPix()));
                 pixObject.getString("pixValue");
-                LogUtil.d("卧槽RGB图片int数组", pixObject.getString("pixValue")+"");
+                LogUtil.d("卧槽RGB图片int数组", pixObject.getString("pixValue")+"高度"+mediaBean.getHeight()+"宽度"+mediaBean.getWidth());
                 byte b[] = pixObject.getString("pixValue").getBytes() ;
                 LogUtil.d("卧槽RGB图片byte数组", pixObject.getString("pixValue")+"");
                getOriginalBitmap(b,12,12);
