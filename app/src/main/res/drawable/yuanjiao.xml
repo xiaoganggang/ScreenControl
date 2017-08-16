@@ -5,15 +5,15 @@
 
     <!-- 边框色 -->
     <stroke
-        android:width="0.5dip"
-        android:color="#DBDBDB" />
+        android:width="1dip"
+        android:color="#00acff" />
     <!-- 背景色 -->
     <solid android:color="#FFFFFF" />
 
     <corners
-        android:bottomLeftRadius="9dp"
-        android:bottomRightRadius="9dp"
-        android:topLeftRadius="9dp"
-        android:topRightRadius="9dp" />
+        android:bottomLeftRadius="15dp"
+        android:bottomRightRadius="15dp"
+        android:topLeftRadius="15dp"
+        android:topRightRadius="15dp" />
 
 </shape>

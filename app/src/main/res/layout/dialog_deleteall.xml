@@ -41,7 +41,7 @@
                 android:layout_marginLeft="20dp"
                 android:layout_marginTop="5dp"
                 android:gravity="center"
-                android:text="确定删除屏幕中所选内容？"
+                android:text="确定删除屏幕中的所有内容吗？"
                 android:textColor="#00acff"
                 android:textSize="20dp"/>
 
@@ -65,7 +65,7 @@
             android:gravity="center"
             android:orientation="horizontal">
             <Button
-                android:id="@+id/deletecheckceng_quxiao"
+                android:id="@+id/deleteallceng_quxiao"
                 android:layout_marginRight="10dp"
                 android:layout_width="100dp"
                 android:layout_height="35dp"
@@ -86,7 +86,7 @@
             android:gravity="center"
             android:orientation="horizontal">
             <Button
-                android:id="@+id/deletecheckceng_ok"
+                android:id="@+id/deleteallceng_ok"
                 android:layout_marginRight="10dp"
                 android:layout_width="100dp"
                 android:layout_height="35dp"

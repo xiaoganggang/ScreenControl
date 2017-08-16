@@ -82,6 +82,7 @@ import gang.com.screencontrol.fragment.Media_Fragment.MediaAddCallBackListener;
 import gang.com.screencontrol.fragment.Message_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment;
 import gang.com.screencontrol.fragment.Model_Fragment.ModelAddCallBackListener;
+import gang.com.screencontrol.input.Global;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.service.MainService.MessageCallBackListener;
 import gang.com.screencontrol.util.AppManager;
@@ -97,7 +98,7 @@ import okhttp3.WebSocket;
  * TabLayout的使用  ：http://www.jianshu.com/p/2b2bb6be83a8
  * 处理Fragment+Viewpage一起使用时候获取Fragment对象：http://m.jb51.net/article/102213.htm
  */
-public class MainAct_xiuding extends AppCompatActivity implements MessageCallBackListener, MediaAddCallBackListener, ModelAddCallBackListener ,DeviceAddCallBackListener{
+public class MainAct_xiuding extends AppCompatActivity implements MessageCallBackListener, MediaAddCallBackListener, ModelAddCallBackListener, DeviceAddCallBackListener {
     @BindView(R.id.lastmodel)
     ImageView lastmodel;
     @BindView(R.id.nextmodel)
@@ -176,7 +177,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
      * 下面两个全局变量都是在MAXWALLSCREENCONTENT这个接口解析时候执行点击事件对这两个赋值，给这两个全局变量操作
      */
     //用来表示点击的那个层特定的数据
-    private ContentBeanX quan_One_contentbean;
+    private ContentBeanX quan_One_contentbean = null;
     //用来表示点击的那个层里面具有的特定的元素list，已经被转成String的json
     private String quanju_yuansu_list_json;
     //参数传递时候，与1920和1080形成比例控制pieceXml
@@ -197,7 +198,8 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
     //用于存放每个层的zoder，用于置顶排序用
     private List<Integer> layer_zoderlist = new ArrayList<>();
     //用于存放点击的媒体的信息
-    private BodyBean media_bodyBean;
+    BodyBean lalal;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -626,14 +628,15 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
      */
     @Override
     public void OnAddMediaView(BodyBean mediaBean_childdetial) {
+        //添加媒体层的时候也需要先判断
         //同时在这里执行view添加到StickView的操作
-        media_bodyBean=mediaBean_childdetial;
+        lalal = mediaBean_childdetial;
         Media_Addceng();
+
     }
 
     /**
      * 媒体模块向屏幕中添加层，需要判断一下当前内容中是否有这个层
-     *
      */
     private void Media_Addceng() {
         //发送获取一个唯一的id
@@ -756,6 +759,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                             float finally_m_top = m_top * (hahawallheight / 1080);
                             lp.setMargins((int) finally_m_left, (int) finally_m_top, 0, 0);
                             layer_zoderlist.add(ContentXlist.get(i).getZorder());
+                            Global.Maxzoder = get_Max_zoder();
                             layerid_list.add(ContentXlist.get(i).getGuid());
                             containViewXiuding.addView(mDragView);
                             //向两个list中添加数据
@@ -869,10 +873,10 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                         String bodystring = allmodelobject.getString("body");
                         JSONObject GETUNIQUEIDobject = new JSONObject(bodystring);
                         unlayerid = GETUNIQUEIDobject.getInt("id");
-                        LogUtil.e("不唯一ID", unlayerid + "");
+                        LogUtil.e("添加层内容不唯一ID", unlayerid + "");
                         //防止空指针判断取到那个id没有
                         if (unlayerid != 0) {
-                            if (layerid_list.contains(media_bodyBean.getFileId())) {
+                            if (layerid_list.contains(lalal.getFileId())) {
                                 DialogUIUtils.showToastCenter("确定替换层吗");
                             } else {
                                 DragScaleView mDragView = new DragScaleView(MainAct_xiuding.this);  //创建imageview
@@ -886,6 +890,8 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                                 containViewXiuding.addView(mDragView);
                                 //向两个list中添加数据
                                 dragScaleViewList.add(mDragView);
+                                int addzoder = Global.Maxzoder + 1;
+                                LogUtil.e("添加层内容", unlayerid + lalal.getDescription() + "=====" + lalal.getFileId() + "=====" + lalal.getFileName() + "层Zoder" + addzoder);
                                 webSocket.send("    {\n" +
                                         "       \"body\" : {\n" +
                                         "          \"alpha\" : 1.0,\n" +
@@ -894,14 +900,14 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                                         "          \"layerItem\" : [\n" +
                                         "             {\n" +
                                         "                \"ID\" : " + unlayerid + ",\n" +
-                                        "                \"description\" :" + media_bodyBean.getDescription() + " \"\",\n" +
+                                        "                \"description\" :" + lalal.getDescription() + " \"\",\n" +
                                         "                \"majorID\" : -1,\n" +
-                                        "                \"minorID\" : 176,\n" +
-                                        "                \"name\" : \"" + media_bodyBean.getFileName() + "\",\n" +
+                                        "                \"minorID\" : " + lalal.getFileId() + ",\n" +
+                                        "                \"name\" : \"" + lalal.getFileName() + "\",\n" +
                                         "                \"playOrder\" : 0,\n" +
                                         "                \"playTime\" : 30,\n" +
                                         "                \"refreshTime\" : 1719895702,\n" +
-                                        "                \"type\" : " + media_bodyBean.getType() + ",\n" +
+                                        "                \"type\" : " + lalal.getType() + ",\n" +
                                         "                \"validSource\" : 1\n" +
                                         "             }\n" +
                                         "          ],\n" +
@@ -910,7 +916,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                                         "                <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\"0\\\" slavetop=\\\"0\\\" slavewidth=\\\"1\\\" slaveheight=\\\"1\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n\n" +
                                         "            </Layer>\\n\",\n" +
                                         "          \"type\" : \"Add\",\n" +
-                                        "          \"zOrder\" : 12\n" +
+                                        "          \"zOrder\" : " + addzoder + "\n" +
                                         "       },\n" +
                                         "       \"guid\" : \"M-45\",\n" +
                                         "       \"type\" : \"LAYERACTION\"\n" +
@@ -1085,6 +1091,8 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                                 Intent stopIntent = new Intent(MainAct_xiuding.this, MainService.class);
                                 stopService(stopIntent);
                                 AppManager.finishAllActivity();
+                                //彻底结束程序进程
+                                android.os.Process.killProcess(android.os.Process.myPid());
                             }
                         })
                         .setNegativeButton("取消", new OnClickListener() {
@@ -1130,35 +1138,17 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 }
                 break;
             case R.id.deleteceng:
-               /* View rootView = View.inflate(MainAct_xiuding.this, R.layout.d, null);
-                DialogUIUtils.showCustomAlert(this, rootView).show();*/
-                DialogUIUtils.showMdAlert(MainAct_xiuding.this, "删除", "确定删除选中的层吗？", new DialogUIListener() {
-                    @Override
-                    public void onPositive() {
-                        //删除该层
-                        String request_delete_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
-                                "\"highlight\": false,\n" +
-                                "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
-                                "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
-                                "\"type\": \"Delete\",\n" +
-                                "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
-                                "},\n" +
-                                "\"guid\": \"M-45\",\n" +
-                                "\"type\": \"LAYERACTION\"\n" +
-                                "}";
-                        webSocket.send(request_delete_ceng);
-                    }
-
-                    @Override
-                    public void onNegative() {
-
-                    }
-                }).show();
+                if (quan_One_contentbean == null) {
+                    showClearScreenDialog();
+                } else {
+                    showDeletecheckDialog();
+                }
                 break;
             case R.id.save_ceng:
                 showSaveDialog();
                 break;
             case R.id.quanping_ceng:
+
                 DialogUIUtils.showMdAlert(MainAct_xiuding.this, "全屏", "确定全屏显示选中的层吗？", new DialogUIListener() {
                     @Override
                     public void onPositive() {
@@ -1222,7 +1212,7 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
             case R.id.light_controller:
                 //调高亮度该层
                 ToastUtil.show(MainAct_xiuding.this, "调高亮度该层");
-                String request_light_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                String request_light_ceng = "{\"body\": {\n" + "\"alpha\": 0.1,\n" +
                         "\"highlight\": true,\n" +
                         "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
                         "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"" + slaveID + "\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
@@ -1236,11 +1226,12 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 break;
             case R.id.top_ceng:
                 ToastUtil.show(MainAct_xiuding.this, "调高该层位于顶部");
+                int topzoder = Global.Maxzoder + 1;
                 String request_top_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
                         "\"highlight\": false,\n" +
                         "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
                         "\"type\": \"ZOrder\",\n" +
-                        "\"zOrder\": " + get_Max_zoder() + "\n" +
+                        "\"zOrder\": " + topzoder + "\n" +
                         "},\n" +
                         "\"guid\": \"M-45\",\n" +
                         "\"type\": \"LAYERACTION\"\n" +
@@ -1272,19 +1263,21 @@ public class MainAct_xiuding extends AppCompatActivity implements MessageCallBac
                 break;
         }
     }
-/**
- * 置顶用到的方法，获取到最大的zoder
- */
-private int get_Max_zoder()
-{
-    int max_zoder=layer_zoderlist.get(0);
-    for(int i=0;i<layer_zoderlist.size();i++){
-        if(layer_zoderlist.get(i)>max_zoder){
-            max_zoder=layer_zoderlist.get(i);
+
+    /**
+     * 置顶用到的方法，获取到最大的zoder
+     */
+    private int get_Max_zoder() {
+        int max_zoder = layer_zoderlist.get(0);
+        for (int i = 0; i < layer_zoderlist.size(); i++) {
+            if (layer_zoderlist.get(i) > max_zoder) {
+                max_zoder = layer_zoderlist.get(i);
+            }
         }
+        LogUtil.e("最大的Zoder数", max_zoder + "");
+        return max_zoder;
     }
-    return max_zoder;
-}
+
     /**
      * 四分屏：针对手机屏幕中的内容发送View的变换
      *
@@ -1431,6 +1424,7 @@ private int get_Max_zoder()
                             Intent stopIntent = new Intent(MainAct_xiuding.this, MainService.class);
                             stopService(stopIntent);
                             AppManager.finishAllActivity();
+                            android.os.Process.killProcess(android.os.Process.myPid());
                         }
                     })
                     .setNegativeButton("取消", new OnClickListener() {
@@ -1445,7 +1439,98 @@ private int get_Max_zoder()
     }
 
     /**
-     * 保存模式dialog的弹出方法
+     * dialog清空所有屏幕内容的
+     */
+    private void showClearScreenDialog() {
+        final Dialog dialog = new Dialog(this, R.style.dialog);
+        dialog.setContentView(R.layout.dialog_deleteall);
+        Button deleteallceng_quxiao = (Button) dialog.findViewById(R.id.deleteallceng_quxiao);
+        deleteallceng_quxiao.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        Button deleteallceng_ok = (Button) dialog.findViewById(R.id.deleteallceng_ok);
+        deleteallceng_ok.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //删除所有的层接口----https://www.showdoc.cc/2452?page_id=11259
+                String request_deleteall_ceng = "    {\n" +
+                        "       \"body\" : \"\",\n" +
+                        "       \"guid\" : \"M-213\",\n" +
+                        "       \"type\" : \"CLEARSCREENCONTENT\"\n" +
+                        "    }";
+                webSocket.send(request_deleteall_ceng);
+                dialog.dismiss();
+            }
+        });
+        Window dialogWindow = dialog.getWindow();
+        WindowManager.LayoutParams lp = dialogWindow.getAttributes();
+        dialogWindow.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        lp.x = 0;
+        lp.y = 0;
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int width1 = dm.widthPixels;
+        int height1 = dm.heightPixels;
+        lp.width = (int) (0.55 * width1);
+        lp.height = (int) (0.25 * height1);
+        lp.alpha = 1.0f;
+        dialogWindow.setAttributes(lp);
+        dialog.show();
+    }
+
+    /**
+     * dialog删除选中的层
+     */
+    private void showDeletecheckDialog() {
+        final Dialog dialog = new Dialog(this, R.style.dialog);
+        dialog.setContentView(R.layout.dialog_delete);
+        Window dialogWindow = dialog.getWindow();
+        Button deletecheeckceng_quxiao = (Button) dialog.findViewById(R.id.deletecheckceng_quxiao);
+        deletecheeckceng_quxiao.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        Button deletecheck_ok = (Button) dialog.findViewById(R.id.deletecheckceng_ok);
+        deletecheck_ok.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //删除该层
+                String request_delete_ceng = "{\"body\": {\n" + "\"alpha\": 1.0,\n" +
+                        "\"highlight\": false,\n" +
+                        "\"layerID\": " + quan_One_contentbean.getGuid() + ",\n" +
+                        "\"layerItem\":" + quanju_yuansu_list_json + ",\"pieceXml\": \"<Layer>\\n   <Piece slaveid=\\\"207\\\" slaveleft=\\\"0.6\\\" slavetop=\\\"0\\\" slavewidth=\\\"0.4\\\" slaveheight=\\\"0.948148\\\" layerleft=\\\"0\\\" layertop=\\\"0\\\" layerwidth=\\\"1\\\" layerheight=\\\"1\\\" />\\n</Layer>\\n\",\n" +
+                        "\"type\": \"Delete\",\n" +
+                        "\"zOrder\": " + quan_One_contentbean.getZorder() + "\n" +
+                        "},\n" +
+                        "\"guid\": \"M-45\",\n" +
+                        "\"type\": \"LAYERACTION\"\n" +
+                        "}";
+                webSocket.send(request_delete_ceng);
+                dialog.dismiss();
+            }
+        });
+        WindowManager.LayoutParams lp = dialogWindow.getAttributes();
+        dialogWindow.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        lp.x = 0;
+        lp.y = 0;
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int width1 = dm.widthPixels;
+        int height1 = dm.heightPixels;
+        lp.width = (int) (0.55 * width1);
+        lp.height = (int) (0.25 * height1);
+        lp.alpha = 1.0f;
+        dialogWindow.setAttributes(lp);
+        dialog.show();
+    }
+
+    /**
+     * dialog保存模式的弹出方法
      */
     private void showSaveDialog() {
         final Dialog dialog = new Dialog(this, R.style.dialog);

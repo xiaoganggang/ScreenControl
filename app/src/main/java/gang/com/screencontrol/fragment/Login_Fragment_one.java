@@ -109,7 +109,7 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                     MainService.addListener(this);
                     webSocket.send("    {\n" +
                             "       \"body\" : {\n" +
-                            "          \"userName\" : \"Admin\",\n" +
+                            "          \"userName\" : \"test1\",\n" +
                             "          \"userPassword\" : \"admin\"\n" +
                             "       },\n" +
                             "       \"guid\" : \"M-0\",\n" +
