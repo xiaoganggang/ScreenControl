@@ -32,8 +32,7 @@ public class App extends Application {
                 .build();
         Fresco.initialize(this);
         DialogUIUtils.init(applicationContext);
-        Intent i = new Intent(this, MainService.class);
-        this.startService(i);
+
     }
 
     //获取上下文全局变量

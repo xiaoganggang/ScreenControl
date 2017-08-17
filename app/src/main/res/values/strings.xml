@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">鼎泓导播</string>
     <string name="login_logo_title">鼎泓多媒体信息导播发布平台</string>
+    <string name="loading">加载中...</string>
 </resources>

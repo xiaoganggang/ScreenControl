@@ -10,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.dou361.dialogui.DialogUIUtils;
+import com.dou361.dialogui.listener.DialogUIListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -23,9 +25,9 @@ import gang.com.screencontrol.R;
 import gang.com.screencontrol.adapter.BaseAdapter;
 import gang.com.screencontrol.adapter.DeviceAdapter;
 import gang.com.screencontrol.bean.Devicebean_child;
-import gang.com.screencontrol.bean.Devicebean_child.BodyBean;
 import gang.com.screencontrol.bean.Devicebean_childfolder;
 import gang.com.screencontrol.defineview.DividerItemDecoration;
+import gang.com.screencontrol.input.Global_public;
 import gang.com.screencontrol.potting.BaseFragment;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
@@ -40,7 +42,7 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
     private RecyclerView recycler_device;
     private DeviceAdapter deviceadapter;
     private List<Devicebean_childfolder.BodyBean.DeviceFolderInfoBean> devicebean_childfolders=new ArrayList<>();
-    private List<Devicebean_child.BodyBean.InfoListBean> devicebean_child=new ArrayList<>();
+    private List<Devicebean_child.BodyBean.InfoListBean> devicebean_childall=new ArrayList<>();
     private Gson gson = new Gson();
     private WebSocket webSocket;
     private static DeviceAddCallBackListener mydeviceaddListener1;
@@ -89,7 +91,7 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
     }
 
     private void showView() {
-        deviceadapter = new DeviceAdapter(getActivity(), devicebean_child);
+        deviceadapter = new DeviceAdapter(getActivity(), devicebean_childall);
         recycler_device.setAdapter(deviceadapter);
         recycler_device.setLayoutManager(new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.HORIZONTAL));
         recycler_device.setItemAnimator(new DefaultItemAnimator());
@@ -98,8 +100,26 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
             @Override
             public void onClick(View v, int position) {
                 if (null != mydeviceaddListener1) {
-                    //将点击事件传递给回调函数
-                    mydeviceaddListener1.OnAddDeviceView(devicebean_child.get(position));
+                    //添加设备回调这里，需要判断那个设备是不是主机，如果是主机则不能添加
+                    if (Global_public.slaveip_list.contains(devicebean_childall.get(position).getAddressIp()))
+                    {
+                        DialogUIUtils.showAlert(getActivity(), "鼎泓提示", "操作主机设备不可添加到显示墙！", null, null, null, null, true, true, true, new DialogUIListener() {
+                            @Override
+                            public void onPositive() {
+
+                            }
+
+                            @Override
+                            public void onNegative() {
+
+                            }
+                        }).show();
+                    }
+                    else
+                    {
+                        //将点击事件传递给回调函数
+                        mydeviceaddListener1.OnAddDeviceView(devicebean_childall.get(position));
+                    }
                 }
             }
         });
@@ -138,8 +158,12 @@ public class Device_Fragment extends BaseFragment implements MainService.Message
                     {
                         String bodystring = allmodelobject.getString("body");
                         JSONObject basicInfoboj = new JSONObject(bodystring);
-                        devicebean_child = gson.fromJson(basicInfoboj.getString("infoList"), new TypeToken<List<Devicebean_child.BodyBean.InfoListBean>>() {
+                        List<Devicebean_child.BodyBean.InfoListBean>   devicebean_child = gson.fromJson(basicInfoboj.getString("infoList"), new TypeToken<List<Devicebean_child.BodyBean.InfoListBean>>() {
                         }.getType());
+                        for(int i=0;i<devicebean_child.size();i++)
+                        {
+                            devicebean_childall.add(devicebean_child.get(i));
+                        }
                         mHasLoadedOnce=true;
                         showView();
                     }
@@ -159,7 +183,7 @@ public interface DeviceAddCallBackListener {
     /**
      * 用于注册回调事件
      */
-    public static void SetMediaAddListener(DeviceAddCallBackListener mydeviceaddListener) {
+    public static void SetDeviceAddListener(DeviceAddCallBackListener mydeviceaddListener) {
         mydeviceaddListener1 = mydeviceaddListener;
     }
 

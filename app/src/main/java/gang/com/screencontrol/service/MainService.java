@@ -11,6 +11,9 @@ import android.graphics.BitmapFactory;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -31,6 +34,7 @@ import javax.net.ssl.X509TrustManager;
 import gang.com.screencontrol.MainActivity;
 import gang.com.screencontrol.R;
 import gang.com.screencontrol.util.LogUtil;
+import gang.com.screencontrol.util.ToastUtil;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -91,6 +95,12 @@ public class MainService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent!=null)
+        {
+            adress = intent.getStringExtra("adress");
+            port = intent.getStringExtra("port");
+            initWebSocket(adress, port);
+        }
         //启用前台服务，主要是startForeground()
         intent = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 0, intent, 0);
@@ -104,11 +114,6 @@ public class MainService extends Service {
                 .build();
         notification.flags = Notification.FLAG_SHOW_LIGHTS;
         startForeground(1, notification);
-
-       /* adress = intent.getStringExtra("adress");
-        port = intent.getStringExtra("port");*/
-
-        initWebSocket(adress, port);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -169,7 +174,7 @@ public class MainService extends Service {
                 .build();
 
         //Request request = new Request.Builder().url("wss://" + adress + ":" + port).build();
-        Request request = new Request.Builder().url("wss://192.168.12.4:7681").build();
+        Request request = new Request.Builder().url("wss://"+adress+":"+port+"").build();
         //建立连接
         mOkHttpClient.newWebSocket(request, new WebSocketListener() {
             @Override
@@ -187,6 +192,27 @@ public class MainService extends Service {
             public void onMessage(WebSocket webSocket, String text) {
                 System.out.println("client onMessage");
                 System.out.println("message:" + text);
+                JSONObject loginobject = null;
+                try {
+                    loginobject = new JSONObject(text);
+                    if (loginobject.getString("type").equals("SERVERHEARTBEAT"))
+                    {
+                        if (webSocket!=null)
+                        {
+                            webSocket.send("    {\n" +
+                                    "       \"body\" : {\n" +
+                                    "          \"userName\" : \"11111\",\n" +
+                                    "          \"userPassword\" : \"11111\"\n" +
+                                    "       },\n" +
+                                    "       \"guid\" : \"M-0\",\n" +
+                                    "       \"type\" : \"QUERYUSERLOGIN\"\n" +
+                                    "    }");
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
                 callBack(text);
                 /*if (null != messageLister) {
                     messageLister.onRcvMessage(text);
@@ -269,5 +295,7 @@ public class MainService extends Service {
 
         void onRcvMessage(String text);
     }
+
+
 }
 

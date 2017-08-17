@@ -8,7 +8,6 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-
         android:gravity="center_horizontal"
         android:orientation="vertical">
 
@@ -26,7 +25,8 @@
             android:layout_width="fill_parent"
             android:layout_height="1dp"
             android:layout_marginBottom="10dp"
-            android:background="#DBDBDB"/>
+            android:layout_marginTop="10dp"
+            android:background="#00acff"/>
 
 
         <LinearLayout
@@ -38,12 +38,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="6dp"
+                android:layout_marginBottom="5dp"
                 android:layout_marginLeft="20dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="5dp"
                 android:gravity="center"
-                android:text="确定全屏显示选中的层吗？"
-                android:textColor="#00CD00"
+                android:text="确定全屏选中的内容吗？"
+                android:textColor="#00acff"
                 android:textSize="20dp"/>
 
 
@@ -51,25 +51,25 @@
     </LinearLayout>
 
     <TextView
-    android:layout_width="match_parent"
-    android:background="#00acff"
-    android:layout_marginTop="15dp"
-    android:layout_height="1dp"/>
+        android:layout_width="match_parent"
+        android:background="#00acff"
+        android:layout_marginTop="15dp"
+        android:layout_height="1dp"/>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:orientation="horizontal">
         <LinearLayout
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="match_parent"
+            android:layout_height="40dp"
             android:gravity="center"
             android:orientation="horizontal">
             <Button
-                android:padding="5dp"
+                android:id="@+id/quanpingceng_quxiao"
                 android:layout_marginRight="10dp"
                 android:layout_width="100dp"
-                android:layout_height="32dp"
+                android:layout_height="35dp"
                 android:background="@null"
                 android:gravity="center"
                 android:text="取消"
@@ -83,19 +83,24 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="match_parent"
+            android:layout_height="40dp"
             android:gravity="center"
             android:orientation="horizontal">
             <Button
-                android:padding="5dp"
+                android:id="@+id/quanpingceng_ok"
                 android:layout_marginRight="10dp"
                 android:layout_width="100dp"
-                android:layout_height="32dp"
+                android:layout_height="35dp"
                 android:background="@null"
-                android:gravity="center"
                 android:textSize="20dp"
+                android:gravity="center"
                 android:text="确定"
-                android:textColor="#00acff"/>
+                android:textColor="#FF3030"/>
         </LinearLayout>
+
     </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:background="#00acff"
+        android:layout_height="1dp"/>
 </LinearLayout>

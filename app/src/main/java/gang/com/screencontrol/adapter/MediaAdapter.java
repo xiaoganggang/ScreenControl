@@ -63,8 +63,8 @@ public class MediaAdapter extends BaseSimpleAdapter<MediaBean_childdetial.BodyBe
             SimpleDraweeView simpleDraweeView = (SimpleDraweeView) viewHolder.getView(R.id.media_pc);
             simpleDraweeView.setImageResource(R.mipmap.internet);
         } else if (mediaBean.getFolderId() == 15) {
-            /*SimpleDraweeView simpleDraweeView = (SimpleDraweeView) viewHolder.getView(R.id.media_pc);
-            simpleDraweeView.setImageResource(R.mipmap.photokuang);*/
+            SimpleDraweeView simpleDraweeView = (SimpleDraweeView) viewHolder.getView(R.id.media_pc);
+            simpleDraweeView.setImageResource(R.mipmap.photokuang);
         }
         viewHolder.getTextView(R.id.media_name).setText(mediaBean.getFileName());
     }

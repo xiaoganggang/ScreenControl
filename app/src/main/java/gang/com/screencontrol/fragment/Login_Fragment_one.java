@@ -39,6 +39,7 @@ import butterknife.Unbinder;
 import gang.com.screencontrol.MainAct_xiuding;
 import gang.com.screencontrol.MainActivity;
 import gang.com.screencontrol.R;
+import gang.com.screencontrol.input.Global_public;
 import gang.com.screencontrol.service.MainService;
 import gang.com.screencontrol.util.LogUtil;
 import gang.com.screencontrol.util.ToastUtil;
@@ -75,7 +76,7 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
     @BindView(R.id.button_login1)
     Button buttonLogin1;
     Unbinder unbinder;
-
+    private WebSocket webSocket;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -99,26 +100,26 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
             case R.id.image_login1_zidonglogin:
                 break;
             case R.id.button_login1:
-                //点击登录按钮首先要连接websocket，开启这个服务
-              /*  Intent i = new Intent(getActivity(), MainService.class);
-                i.putExtra("adress", editLogin1Dizhi.getText().toString());
-                i.putExtra("port", editLogin1Duankou.getText().toString());
-                getActivity().startService(i);*/
-                WebSocket webSocket = MainService.getWebSocket();
-                if (null != webSocket) {
-                    MainService.addListener(this);
-                    webSocket.send("    {\n" +
-                            "       \"body\" : {\n" +
-                            "          \"userName\" : \"test1\",\n" +
-                            "          \"userPassword\" : \"admin\"\n" +
-                            "       },\n" +
-                            "       \"guid\" : \"M-0\",\n" +
-                            "       \"type\" : \"QUERYUSERLOGIN\"\n" +
-                            "    }");
-                } else {
-                    ToastUtil.show(getActivity(), "输入的端口和账号有误或检查服务器是否开启");
-                }
+                Global_public.ip=editLogin1Dizhi.getText().toString();
+                Global_public.post=editLogin1Duankou.getText().toString();
+                Global_public.username=editLogin1Username.getText().toString();
+                Global_public.password=editLogin1Pass.getText().toString();
+                Intent i = new Intent(getActivity(), MainService.class);
+                i.putExtra("adress", Global_public.ip);
+                i.putExtra("port", Global_public.post);
+                getActivity().startService(i);
+                //服务起来之后初始化websocket
+                initwebsocket();
                 break;
+        }
+    }
+//初始化websocket
+    private void initwebsocket() {
+        webSocket = MainService.getWebSocket();
+        if (null != webSocket) {
+            MainService.addListener(this);
+        } else {
+            ToastUtil.show(getActivity(), "输入的端口和账号有误或检查服务器是否开启");
         }
     }
 
@@ -165,6 +166,7 @@ public class Login_Fragment_one extends Fragment implements MainService.MessageC
                 LogUtil.d("哈哈哈", text);
                 try {
                     JSONObject loginobject = new JSONObject(text);
+
                     if (loginobject.getString("type").equals("QUERYUSERLOGIN") ) {
                         /**
                          * 这里需要注意的是假如登录成功返回的数据会缺少一个字段loginType ，登录失败这个字段才会有值
